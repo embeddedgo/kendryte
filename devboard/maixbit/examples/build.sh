@@ -1,3 +1,5 @@
+#!/bin/sh
+
 export GOOS=noos
 export GOARCH=riscv64
 
