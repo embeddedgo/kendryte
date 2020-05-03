@@ -1,0 +1,23 @@
+Some CSRs at firmware start (after bootloader)
+----------------------------------------------
+
+"Machine ISA" misa=0x800000000014112d
+  XLEN=64, extensions=USMIFDCA
+
+"Machine Vendor ID" mvendorid=0x4b5
+  JEDEC ID: 7f 7f 7f 7f 7f 7f 7f 7f 7f b5: "Canaan-Creative Co. Ltd"
+
+"Machine Architecture ID" marchid=0xe59889e6a5a04149
+
+"Machine Implementation ID" mimpid=0x4d41495832303030
+
+"Machine Status Register" mstatus=0x8000000000007800
+  non-zero fields: MPP=3, FS=3, SD=1
+
+"Machine Trap-Vector Base-Address" mtvec=0x8800008c
+
+"Machine Trap Delegation" medeleg=0x0, mideleg=0x0
+
+"Machine Interrupt pending/enable" mip=0x8, mie=0x8
+
+"Machine Cause" mcause=0x1
