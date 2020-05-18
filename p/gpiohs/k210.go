@@ -7,159 +7,23 @@
 // Instances:
 //  GPIOHS  GPIOHS_BASE  -  GPIOHS0,GPIOHS1,GPIOHS2,GPIOHS3,GPIOHS4,GPIOHS5,GPIOHS6,GPIOHS7,GPIOHS8,GPIOHS9,GPIOHS10,GPIOHS11,GPIOHS12,GPIOHS13,GPIOHS14,GPIOHS15,GPIOHS16,GPIOHS17,GPIOHS18,GPIOHS19,GPIOHS20,GPIOHS21,GPIOHS22,GPIOHS23,GPIOHS24,GPIOHS25,GPIOHS26,GPIOHS27,GPIOHS28,GPIOHS29,GPIOHS30,GPIOHS31  High-speed GPIO
 // Registers:
-//  0x000 32  input_val   Input Value Register
-//  0x004 32  input_en    Pin Input Enable Register
-//  0x008 32  output_en   Pin Output Enable Register
-//  0x00C 32  output_val  Output Value Register
-//  0x010 32  pullup_en   Internal Pull-Up Enable Register
-//  0x014 32  drive       Drive Strength Register
-//  0x018 32  rise_ie     Rise Interrupt Enable Register
-//  0x01C 32  rise_ip     Rise Interrupt Pending Register
-//  0x020 32  fall_ie     Fall Interrupt Enable Register
-//  0x024 32  fall_ip     Fall Interrupt Pending Register
-//  0x028 32  high_ie     High Interrupt Enable Register
-//  0x02C 32  high_ip     High Interrupt Pending Register
-//  0x030 32  low_ie      Low Interrupt Enable Register
-//  0x034 32  low_ip      Low Interrupt Pending Register
-//  0x038 32  iof_en      HW I/O Function Enable Register
-//  0x03C 32  iof_sel     HW I/O Function Select Register
-//  0x040 32  output_xor  Output XOR (invert) Register
+//  0x000 32  INPUT_VAL   Input Value Register
+//  0x004 32  INPUT_EN    Pin Input Enable Register
+//  0x008 32  OUTPUT_EN   Pin Output Enable Register
+//  0x00C 32  OUTPUT_VAL  Output Value Register
+//  0x010 32  PULLUP_EN   Internal Pull-Up Enable Register
+//  0x014 32  DRIVE       Drive Strength Register
+//  0x018 32  RISE_IE     Rise Interrupt Enable Register
+//  0x01C 32  RISE_IP     Rise Interrupt Pending Register
+//  0x020 32  FALL_IE     Fall Interrupt Enable Register
+//  0x024 32  FALL_IP     Fall Interrupt Pending Register
+//  0x028 32  HIGH_IE     High Interrupt Enable Register
+//  0x02C 32  HIGH_IP     High Interrupt Pending Register
+//  0x030 32  LOW_IE      Low Interrupt Enable Register
+//  0x034 32  LOW_IP      Low Interrupt Pending Register
+//  0x038 32  IOF_EN      HW I/O Function Enable Register
+//  0x03C 32  IOF_SEL     HW I/O Function Select Register
+//  0x040 32  OUTPUT_XOR  Output XOR (invert) Register
 // Import:
 //  github.com/embeddedgo/kendryte/p/mmap
 package gpiohs
-
-const (
-	pin%s input_val = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s input_en = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s output_en = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s output_val = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s pullup_en = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s drive = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s rise_ie = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s rise_ip = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s fall_ie = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s fall_ip = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s high_ie = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s high_ip = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s low_ie = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s low_ip = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s iof_en = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s iof_sel = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
-
-const (
-	pin%s output_xor = 0x01 << 0 //+ 
-)
-
-const (
-	pin%sn = 0
-)
