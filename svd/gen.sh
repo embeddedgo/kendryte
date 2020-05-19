@@ -9,7 +9,7 @@ rm -rf *
 
 svdxgen github.com/embeddedgo/kendryte/p ../svd/*.svd
 
-for p in sysctl fpioa; do
+for p in sysctl fpioa gpio gpiohs; do
 	cd $p
 	xgen *.go
 	GOOS=noos GOARCH=riscv64 go build -tags k210

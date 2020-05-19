@@ -5,12 +5,13 @@
 // Package fpioa provides access to the registers of the FPIOA peripheral.
 //
 // Instances:
-//  FPIOA  FPIOA_BASE  -  -  Field Programmable IO Array
+//  FPIOA  FPIOA_BASE  APB0  -  Field Programmable IO Array
 // Registers:
 //  0x000 32  IO[48]      FPIOA GPIO multiplexer io array
 //  0x0C0 32  TIE_EN[8]   FPIOA GPIO multiplexer tie enable array
 //  0x0E0 32  TIE_VAL[8]  FPIOA GPIO multiplexer tie value array
 // Import:
+//  github.com/embeddedgo/kendryte/p/bus
 //  github.com/embeddedgo/kendryte/p/mmap
 package fpioa
 

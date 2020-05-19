@@ -8,6 +8,7 @@ import (
 	"embedded/mmio"
 	"unsafe"
 
+	"github.com/embeddedgo/kendryte/p/bus"
 	"github.com/embeddedgo/kendryte/p/mmap"
 )
 
@@ -21,6 +22,10 @@ func FPIOA() *Periph { return (*Periph)(unsafe.Pointer(uintptr(mmap.FPIOA_BASE))
 
 func (p *Periph) BaseAddr() uintptr {
 	return uintptr(unsafe.Pointer(p))
+}
+
+func (p *Periph) Bus() bus.Bus {
+	return bus.APB0
 }
 
 type IO uint32

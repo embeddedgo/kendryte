@@ -5,7 +5,7 @@
 // Package gpio provides access to the registers of the GPIO peripheral.
 //
 // Instances:
-//  GPIO  GPIO_BASE  -  APB_GPIO  General Purpose Input/Output Interface
+//  GPIO  GPIO_BASE  APB0  APB_GPIO  General Purpose Input/Output Interface
 // Registers:
 //  0x000 32  DATA_OUTPUT           Data (output) registers
 //  0x004 32  DIRECTION             Data direction registers
@@ -23,5 +23,6 @@
 //  0x064 32  ID_CODE               ID code
 //  0x068 32  INTERRUPT_BOTHEDGE    Interrupt both edge type
 // Import:
+//  github.com/embeddedgo/kendryte/p/bus
 //  github.com/embeddedgo/kendryte/p/mmap
 package gpio

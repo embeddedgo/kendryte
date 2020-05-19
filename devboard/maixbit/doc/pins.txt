@@ -1,0 +1,52 @@
+Maix   K210   Function   Remarks
+v2.0   IO
+-------------------------------------------------
+RST    RST    RESET      1.8V, 10k pull-up 
+ 0      0     JTAG_TCK
+ 1      1     JTAG_TDI
+ 2      2     JTAG_TMS
+ 3      3     JTAG_TDO
+ 4      4     ISP_RX
+ 5      5     ISP_TX
+ 6      6
+ 7      7
+ 8      8
+ 9      9
+10     10
+11     11
+12     12     LED_G
+13     13     LED_R
+14     14     LED_B
+15     15
+16     16     BOOT       10k pull-up
+17     17
+18     18     MIC_BCK
+19     19     MIC_WS
+20     20     MIC_DAT3
+21     21
+22     22
+23     23
+24     24
+25     25
+26     26     SD_MISO
+27     27     SD_SCLK 
+28     28     SD_MOSI
+29     29     SD_CS
+30     30
+31     31
+32     32
+33     33
+34     34
+35     35
+       36     LCD_CS     1.8V
+       37     LCD_RST    1.8V
+       38     LCD_DC     1.8V
+       39     LCD_WR     1.8V
+       40     DVP_SDA    1.8V, 4.7k pull-up 
+       41     DVP_SCL    1.8V, 4.7k pull-up
+       42     DVP_RST    1.8V
+       43     DVP_VSYNC  1.8V
+       44     DVP_PWDN   1.8V
+       45     DVP_HSYNC  1.8V
+       46     DVP_XCLK   1.8V
+       47     DVP_PCLK   1.8V
