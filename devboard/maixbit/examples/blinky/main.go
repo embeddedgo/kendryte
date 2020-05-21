@@ -1,27 +1,46 @@
 package main
 
 import (
+	"embedded/mmio"
+	"unsafe"
+
 	"github.com/embeddedgo/kendryte/p/fpioa"
 	"github.com/embeddedgo/kendryte/p/gpio"
 	"github.com/embeddedgo/kendryte/p/sysctl"
 	"github.com/embeddedgo/kendryte/p/uart"
 )
 
-var d1, d2 uint64
+func MulDiv(x, m, d uint64) uint64 {
+	divx := x / d
+	modx := x - divx*d
+	divm := m / d
+	modm := m - divm*d
+	return divx*m + modx*divm + modx*modm/d
+}
 
-func delay1() {
-	end := d1 + 1e7
-	for d1 != end {
-		d1++
+func nanotime() int64 {
+	sc := sysctl.SYSCTL()
+	cpuHz := uint64(26e6)
+	if sc.ACLK_SEL().Load() != 0 {
+		pll := sc.PLL[0].Load()
+		r := uint64(pll&sysctl.CLKR)>>sysctl.CLKRn + 1
+		f := uint64(pll&sysctl.CLKF)>>sysctl.CLKFn + 1
+		od := uint64(pll&sysctl.CLKOD)>>sysctl.CLKODn + 1
+		pllHz := 26e6 * f / (r * od)
+		aclkDivSel := sc.ACLK_DIVIDER_SEL().Load() >> sysctl.ACLK_DIVIDER_SELn
+		cpuHz = pllHz / 2 << aclkDivSel
+	}
+	clintHz := cpuHz / 50
+	mtime := (*mmio.U64)(unsafe.Pointer(uintptr(0x2000000 + 0xBFF8))).Load()
+	return int64(MulDiv(mtime, 1e9, clintHz))
+}
+
+func waitUntil(t int64) {
+	for nanotime() < t {
 	}
 }
 
-func delay2() {
-	end := d2 + 3e7
-	for d2 != end {
-		d2++
-	}
-}
+var lastt uint64
 
 func main() {
 	sctl := sysctl.SYSCTL()
@@ -47,19 +66,21 @@ func main() {
 	GPIO := gpio.GPIO()
 	GPIO.DATA_OUTPUT.SetBits(1<<1 + 1<<2 + 1<<3)
 	GPIO.DIRECTION.SetBits(1<<1 + 1<<2 + 1<<3)
+
+	t := nanotime()
 	for {
 		GPIO.DATA_OUTPUT.SetBits(1 << 3)
 		GPIO.DATA_OUTPUT.ClearBits(1 << 1)
-		delay2()
+		t += 1e9
+		waitUntil(t)
 		GPIO.DATA_OUTPUT.SetBits(1 << 1)
 		GPIO.DATA_OUTPUT.ClearBits(1 << 2)
-		delay2()
+		t += 1e9
+		waitUntil(t)
 		GPIO.DATA_OUTPUT.SetBits(1 << 2)
 		GPIO.DATA_OUTPUT.ClearBits(1 << 3)
-		delay2()
-		uartPutc('A')
-		uartPutc('\r')
-		uartPutc('\n')
+		t += 1e9
+		waitUntil(t)
 	}
 }
 
