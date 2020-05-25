@@ -4,8 +4,7 @@ import (
 	"embedded/arch/riscv/systim"
 	"time"
 
-	"github.com/embeddedgo/kendryte/p/fpioa"
-	"github.com/embeddedgo/kendryte/p/gpio"
+	"github.com/embeddedgo/kendryte/hal/fpioa"
 	"github.com/embeddedgo/kendryte/p/sysctl"
 )
 
@@ -24,41 +23,35 @@ func main() {
 	}
 	systim.Setup(cpuHz / 50)
 
-	sctl.APB0_CLK_EN().Set()
-	sctl.CLK_EN_PERI.Store(sysctl.FPIOA_CLK_EN | sysctl.GPIO_CLK_EN)
+	fpioa.EnableClock()
 
-	const (
-		FUNC_GPIO1 = 57
-		FUNC_GPIO2 = 58
-		FUNC_GPIO3 = 59
-	)
+	green := fpioa.Pin(12)
+	red := fpioa.Pin(13)
+	blue := fpioa.Pin(14)
+	pin6 := fpioa.Pin(6)
 
-	green := &fpioa.FPIOA().IO[12]
-	green.Store(FUNC_GPIO1<<fpioa.CH_SELn | 15<<fpioa.DSn | fpioa.OE_EN |
-		fpioa.PD)
-	red := &fpioa.FPIOA().IO[13]
-	red.Store(FUNC_GPIO2<<fpioa.CH_SELn | 15<<fpioa.DSn | fpioa.OE_EN |
-		fpioa.PD)
-	blue := &fpioa.FPIOA().IO[14]
-	blue.Store(FUNC_GPIO3<<fpioa.CH_SELn | 15<<fpioa.DSn | fpioa.OE_EN |
-		fpioa.PD)
-
-	GPIO := gpio.GPIO()
-	GPIO.DATA_OUTPUT.SetBits(1<<1 + 1<<2 + 1<<3)
-	GPIO.DIRECTION.SetBits(1<<1 + 1<<2 + 1<<3)
+	high := fpioa.FuncConst | fpioa.Drive | fpioa.OutEn
+	low := fpioa.FuncConst | fpioa.Drive | fpioa.OutEn | fpioa.OutEnInv
 
 	for {
-		GPIO.DATA_OUTPUT.SetBits(1 << 3)
-		GPIO.DATA_OUTPUT.ClearBits(1 << 1)
+		green.Setup(low)
+		time.Sleep(100 * time.Millisecond)
+		green.Setup(high)
 		time.Sleep(time.Second)
 
-		GPIO.DATA_OUTPUT.SetBits(1 << 1)
-		GPIO.DATA_OUTPUT.ClearBits(1 << 2)
+		red.Setup(low)
+		time.Sleep(100 * time.Millisecond)
+		red.Setup(high)
 		time.Sleep(time.Second)
 
-		GPIO.DATA_OUTPUT.SetBits(1 << 2)
-		GPIO.DATA_OUTPUT.ClearBits(1 << 3)
+		blue.Setup(low)
+		time.Sleep(100 * time.Millisecond)
+		blue.Setup(high)
 		time.Sleep(time.Second)
 
+		pin6.Setup(low)
+		time.Sleep(1000 * time.Millisecond)
+		pin6.Setup(high)
+		time.Sleep(time.Second)
 	}
 }
