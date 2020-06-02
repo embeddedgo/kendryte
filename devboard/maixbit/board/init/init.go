@@ -6,6 +6,7 @@ package init
 
 import (
 	"embedded/arch/riscv/systim"
+	"runtime"
 
 	"github.com/embeddedgo/kendryte/p/sysctl"
 )
@@ -23,4 +24,5 @@ func init() {
 		cpuHz = int64(pllHz / 2 << aclkDivSel)
 	}
 	systim.Setup(cpuHz / 50)
+	runtime.GOMAXPROCS(2)
 }
