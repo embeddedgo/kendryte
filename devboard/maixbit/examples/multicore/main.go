@@ -7,6 +7,7 @@ package main
 import (
 	"embedded/rtos"
 	"runtime"
+	"time"
 
 	"github.com/embeddedgo/kendryte/devboard/maixbit/board/leds"
 )
@@ -18,14 +19,14 @@ func blink(led leds.LED, n int) {
 		if hartid() != 0 {
 			led.SetOn()
 			leds.Green.SetOn()
-			//time.Sleep(11 * time.Millisecond)
-			delay(1e6)
+			time.Sleep(11 * time.Millisecond)
+			//delay(1e6)
 			leds.Green.SetOff()
 			led.SetOff()
 		} else {
 			led.SetOn()
-			//time.Sleep(23 * time.Millisecond)
-			delay(1e6)
+			time.Sleep(23 * time.Millisecond)
+			//delay(1e6)
 			led.SetOff()
 		}
 		delay(n)
@@ -34,7 +35,7 @@ func blink(led leds.LED, n int) {
 
 func main() {
 	go blink(leds.Blue, 5e7)
-	blink(leds.Red, 17e7)
+	blink(leds.Red, 13e7)
 }
 
 func hartid() int
