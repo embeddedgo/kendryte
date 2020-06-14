@@ -6,6 +6,7 @@ package uart
 
 import (
 	"embedded/mmio"
+	"time"
 	"unsafe"
 
 	"github.com/embeddedgo/kendryte/hal/internal"
@@ -105,6 +106,21 @@ func (p *Periph) DisableClock() {
 	mx.CLK_EN_CENT.Unlock()
 }
 
+func (p *Periph) Reset() {
+	sc := sysctl.SYSCTL()
+	mx := &internal.MX.SYSCTL
+
+	mx.PERI_RESET.Lock()
+	sc.PERI_RESET.SetBits(sysctl.UART1_RESET << p.n())
+	mx.PERI_RESET.Unlock()
+
+	time.Sleep(10 * time.Microsecond)
+
+	mx.PERI_RESET.Lock()
+	sc.PERI_RESET.ClearBits(sysctl.UART1_RESET << p.n())
+	mx.PERI_RESET.Unlock()
+}
+
 type Conf1 uint8
 
 const (
@@ -146,25 +162,33 @@ func (p *Periph) Conf2() Conf2 {
 }
 
 func (p *Periph) SetConf2(c Conf2) {
-	p.lcr.Store(uint32(c))
+	p.mcr.Store(uint32(c))
 }
 
 type Conf3 uint8
 
 const (
-	FE     Conf3 = 1 << 0 // enable FIFO mode
-	CRF    Conf3 = 1 << 1 // reset and clear Rx FIFO, self clearing bit
-	CTF    Conf3 = 1 << 2 // reset and clear Tx FIFO, self clearing bit
-	DMAM1  Conf3 = 1 << 3 // dma mode 1
-	TFT0   Conf3 = 0 << 4 // empty Tx FIFO interrupt threshold
-	TFT2   Conf3 = 1 << 4 // 2 words in Tx FIFO interrupt threshold
-	TFT1_4 Conf3 = 2 << 4 // 1/4 Tx FIFO interrupt threshold (4 words)
-	TFT1_2 Conf3 = 3 << 4 // 1/2 Tx FIFO interrupt threshold (8 words)
-	RFT1   Conf3 = 0 << 6 // 1 word Rx FIFO interrupt threshold
-	RFT1_4 Conf3 = 1 << 6 // 1/4 Rx FIFO interrupt threshold (4 words)
-	RFT1_2 Conf3 = 2 << 6 // 1/2 Rx FIFO interrupt threshold (8 words)
-	RFT_2  Conf3 = 3 << 6 // 2 less than full Rx FIFO interrupt threshold
+	FE    Conf3 = 1 << 0 // enable FIFO mode
+	CRF   Conf3 = 1 << 1 // reset and clear Rx FIFO, self clearing bit
+	CTF   Conf3 = 1 << 2 // reset and clear Tx FIFO, self clearing bit
+	DMAM1 Conf3 = 1 << 3 // dma mode 1
+	TFT0  Conf3 = 0 << 4 // empty Tx FIFO interrupt threshold
+	TFT2  Conf3 = 1 << 4 // 2 words in Tx FIFO interrupt threshold
+	TFT4  Conf3 = 2 << 4 // 1/4 Tx FIFO interrupt threshold (4 words)
+	TFT8  Conf3 = 3 << 4 // 1/2 Tx FIFO interrupt threshold (8 words)
+	RFT1  Conf3 = 0 << 6 // 1 word Rx FIFO interrupt threshold
+	RFT4  Conf3 = 1 << 6 // 1/4 Rx FIFO interrupt threshold (4 words)
+	RFT8  Conf3 = 2 << 6 // 1/2 Rx FIFO interrupt threshold (8 words)
+	RFT14 Conf3 = 3 << 6 // 2 less than full Rx FIFO interrupt threshold
 )
+
+func (p *Periph) Conf3() Conf3 {
+	return Conf3(p.fcr_iir.Load())
+}
+
+func (p *Periph) SetConf3(c Conf3) {
+	p.fcr_iir.Store(uint32(c))
+}
 
 type Conf4 uint8
 
@@ -172,15 +196,19 @@ const (
 	PTIME Conf4 = 1 << 7 // programmable Tx intrerrupt mode enable
 )
 
+func (p *Periph) SetConf4(c Conf4) {
+	p.dlh_ier.Store(uint32(c))
+}
+
 func (p *Periph) SetBaudrate(br int) {
-	div := bus.APB0.Clock() / int64(br)
+	div := bus.APB0.Clock() / int64(br) // apb0clock=208000000, div=1805
 	if uint64(div) >= 1<<20 {
 		panic("uart: bad baudrate")
 	}
-	p.lcr.SetBits(dla)
-	p.dlh_ier.Store(uint32(div >> 12))
-	p.rbr_dll_thr.Store(uint32(div >> 4 & 0xFF))
-	p.far.Store(uint32(div & 0xF))
+	p.lcr.SetBits(dla)                           // 0x5023000c
+	p.dlh_ier.Store(uint32(div >> 12))           // 0x50230004, 0
+	p.rbr_dll_thr.Store(uint32(div >> 4 & 0xFF)) // 0x50230000, 112
+	p.dlf.Store(uint32(div & 0xF))               // 0x502300c0, 13
 	p.lcr.ClearBits(dla)
 }
 
@@ -188,7 +216,7 @@ type Event uint8
 
 const (
 	RxNotEmpty Event = 1 << 0 // at least one received word can be read
-	Break      Event = 1 << 4 // break sequence detected
+	LINBreak   Event = 1 << 4 // break sequence detected
 	TxEmpty    Event = 1 << 5 // Tx hold register empty !(FIFO mode && PTIME)
 	TxFull     Event = 1 << 5 // Tx FIFO full (FIFO mode && PTIME)
 	TxDone     Event = 1 << 6 // transmssion complete (shift register is empty)
@@ -201,22 +229,18 @@ const (
 	ErrParity  Error = 1 << 2
 	ErrFraming Error = 1 << 3
 	ErrRxFIFO  Error = 1 << 7
+	ErrAll           = ErrOverrun | ErrParity | ErrFraming | ErrRxFIFO
 )
 
-func (p *Periph) Status() (Status, Error) {
+func (p *Periph) Status() (Event, Error) {
 	lsr := p.lsr.Load()
+	return Event(lsr) &^ Event(ErrAll), Error(lsr) & ErrAll
 }
-
-type Int uint8
-
-const (
-	RxNot
-)
 
 func (p *Periph) Load() int {
 	return int(p.rbr_dll_thr.Load())
 }
 
 func (p *Periph) Store(d int) {
-	return p.rbr_dll_thr.Store(uint32(d))
+	p.rbr_dll_thr.Store(uint32(d))
 }
