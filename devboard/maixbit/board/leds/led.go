@@ -35,7 +35,6 @@ func (d LED) Set(on int) {
 }
 
 func init() {
-	fpioa.EnableClock()
 	Red.SetOff()
 	Green.SetOff()
 	Blue.SetOff()
