@@ -6,8 +6,11 @@ package init
 
 import (
 	"embedded/arch/riscv/systim"
+	"embedded/rtos"
 	"runtime"
 
+	"github.com/embeddedgo/kendryte/hal/fpioa"
+	"github.com/embeddedgo/kendryte/hal/uart"
 	"github.com/embeddedgo/kendryte/p/bus"
 	"github.com/embeddedgo/kendryte/p/sysctl"
 )
@@ -36,6 +39,42 @@ func init() {
 	div = clksel0&(sysctl.APB2_CLK_SEL>>sysctl.APB2_CLK_SELn) + 1
 	bus.APB2.SetClock(cpuHz / int64(div))
 
+	setupDebugWriter()
+
 	systim.Setup(cpuHz / 50)
 	runtime.GOMAXPROCS(2)
+}
+
+const (
+	dbgPin  = 5
+	dbgUART = 3
+	dbgFunc = fpioa.UART3_TX
+)
+
+func setupDebugWriter() {
+	tx := fpioa.Pin(dbgPin)
+	tx.Setup(dbgFunc | fpioa.DriveH34L23 | fpioa.EnOE)
+
+	u := uart.UART(dbgUART)
+	u.EnableClock()
+	u.SetConf1(uart.Word8b)
+	u.SetConf2(0)
+	u.SetConf3(uart.FE | uart.CRF | uart.CTF | uart.TFT8 | uart.RFT1)
+	u.SetConf4(uart.PTIME)
+	u.SetBaudrate(115200)
+
+	rtos.SetSystemWriter(write)
+}
+
+func write(_ int, p []byte) int {
+	u := uart.UART(dbgUART)
+	for _, b := range p {
+		for {
+			if ev, _ := u.Status(); ev&uart.TxFull == 0 {
+				break
+			}
+		}
+		u.Store(int(b))
+	}
+	return len(p)
 }
