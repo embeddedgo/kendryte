@@ -20,16 +20,16 @@ func blink(led leds.LED, n int) {
 			led.SetOn()
 			leds.Green.SetOn()
 			time.Sleep(11 * time.Millisecond)
-			//delay(1e6)
+			//loop(1e6)
 			leds.Green.SetOff()
 			led.SetOff()
 		} else {
 			led.SetOn()
 			time.Sleep(23 * time.Millisecond)
-			//delay(1e6)
+			//loop(1e6)
 			led.SetOff()
 		}
-		delay(n)
+		loop(n)
 	}
 }
 
@@ -39,4 +39,4 @@ func main() {
 }
 
 func hartid() int
-func delay(n int)
+func loop(n int)
