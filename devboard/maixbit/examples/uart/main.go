@@ -14,10 +14,10 @@ import (
 func main() {
 	rx := fpioa.Pin(4)
 	tx := fpioa.Pin(5)
-	rx.Setup(fpioa.UART3_RX | fpioa.EnIE | fpioa.Schmitt)
-	tx.Setup(fpioa.UART3_TX | fpioa.DriveH34L23 | fpioa.EnOE)
+	rx.Setup(fpioa.UART1_RX | fpioa.EnIE | fpioa.Schmitt)
+	tx.Setup(fpioa.UART1_TX | fpioa.DriveH34L23 | fpioa.EnOE)
 
-	u := uart.UART(3)
+	u := uart.UART(1)
 	u.EnableClock()
 	u.Reset()
 	u.SetConf1(uart.Word8b)

@@ -6,7 +6,7 @@ package init
 
 import (
 	"embedded/arch/riscv/systim"
-	//"embedded/rtos"
+	"embedded/rtos"
 	"runtime"
 
 	"github.com/embeddedgo/kendryte/hal/fpioa"
@@ -38,10 +38,9 @@ func init() {
 	bus.APB1.SetClock(cpuHz / int64(div))
 	div = clksel0&(sysctl.APB2_CLK_SEL>>sysctl.APB2_CLK_SELn) + 1
 	bus.APB2.SetClock(cpuHz / int64(div))
-
-	//setupSystemWriter()
-
 	systim.Setup(cpuHz / 50)
+
+	setupSystemWriter()
 	runtime.GOMAXPROCS(2)
 }
 
@@ -57,13 +56,14 @@ func setupSystemWriter() {
 
 	u := uart.UART(dbgUART)
 	u.EnableClock()
+	u.Reset()
 	u.SetConf1(uart.Word8b)
 	u.SetConf2(0)
 	u.SetConf3(uart.FE | uart.CRF | uart.CTF | uart.TFT8 | uart.RFT1)
 	u.SetConf4(uart.PTIME)
 	u.SetBaudrate(115200)
 
-	//rtos.SetSystemWriter(write)
+	rtos.SetSystemWriter(write)
 }
 
 func write(_ int, p []byte) int {
