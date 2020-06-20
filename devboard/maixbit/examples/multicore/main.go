@@ -13,7 +13,7 @@ import (
 )
 
 type report struct {
-	tid, cpuid int
+	tid, hartid int
 }
 
 var ch = make(chan report, 3)
@@ -28,16 +28,20 @@ func thread(tid int) {
 }
 
 func main() {
-	var lastcpu [39]int
-	for i := range lastcpu {
+	var lasthart [30]int
+	for i := range lasthart {
 		go thread(i)
 	}
+	runtime.LockOSThread()
+	rtos.SetPrivLevel(0)
 	for r := range ch {
-		lastcpu[r.tid] = r.cpuid
-		for _, cpuid := range lastcpu {
-			print(" ", cpuid)
+		lasthart[r.tid] = r.hartid
+		hid := hartid()
+		print(hid>>1, hid&1)
+		for _, hid := range lasthart {
+			print(" ", hid>>1, hid&1)
 		}
-		print("\r\n")
+		println()
 	}
 }
 
