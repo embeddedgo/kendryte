@@ -67,14 +67,21 @@ func setupSystemWriter() {
 }
 
 func write(_ int, p []byte) int {
-	u := uart.UART(dbgUART)
 	for _, b := range p {
-		for {
-			if ev, _ := u.Status(); ev&uart.TxFull == 0 {
-				break
-			}
+		if b == '\n' {
+			writeByte('\r')
 		}
-		u.Store(int(b))
+		writeByte(b)
 	}
 	return len(p)
+}
+
+func writeByte(b byte) {
+	u := uart.UART(dbgUART)
+	for {
+		if ev, _ := u.Status(); ev&uart.TxFull == 0 {
+			u.Store(int(b))
+			return
+		}
+	}
 }
