@@ -28,6 +28,7 @@ func thread(tid int) {
 }
 
 func main() {
+	//runtime.GOMAXPROCS(4)
 	var lasthart [30]int
 	for i := range lasthart {
 		go thread(i)
@@ -37,9 +38,9 @@ func main() {
 	for r := range ch {
 		lasthart[r.tid] = r.hartid
 		hid := hartid()
-		print(hid>>1, hid&1)
+		print(hid>>8, hid&0xFF)
 		for _, hid := range lasthart {
-			print(" ", hid>>1, hid&1)
+			print(" ", hid>>8, hid&0xFF)
 		}
 		println()
 	}
