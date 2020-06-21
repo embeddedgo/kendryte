@@ -27,7 +27,7 @@ func main() {
 		b = a
 	}
 	t2 := time.Now()
-	println(t2.Sub(t1).String(), "\r")
+	println(t2.Sub(t1).String())
 }
 
 // Results (K210 416 MHz):
