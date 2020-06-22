@@ -2178,7 +2178,7 @@
                 </register>
             </registers>
             <interrupt>
-                <name>APB_GPIO</name>
+                <name>GPIO</name>
                 <value>23</value>
             </interrupt>
         </peripheral>

@@ -30,7 +30,7 @@ const (
 	RTC       rtos.IRQ = 20
 	WDT0      rtos.IRQ = 21
 	WDT1      rtos.IRQ = 22
-	APB_GPIO  rtos.IRQ = 23
+	GPIO      rtos.IRQ = 23
 	DVP       rtos.IRQ = 24
 	KPU       rtos.IRQ = 25
 	FFT       rtos.IRQ = 26

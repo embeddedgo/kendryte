@@ -28,7 +28,7 @@ const (
 	RTC       = 20
 	WDT0      = 21
 	WDT1      = 22
-	APB_GPIO  = 23
+	GPIO      = 23
 	DVP       = 24
 	KPU       = 25
 	FFT       = 26

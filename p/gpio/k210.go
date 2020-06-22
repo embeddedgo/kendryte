@@ -5,7 +5,7 @@
 // Package gpio provides access to the registers of the GPIO peripheral.
 //
 // Instances:
-//  GPIO  GPIO_BASE  APB0  APB_GPIO  General Purpose Input/Output Interface
+//  GPIO  GPIO_BASE  APB0  GPIO  General Purpose Input/Output Interface
 // Registers:
 //  0x000 32  DATA_OUTPUT           Data (output) registers
 //  0x004 32  DIRECTION             Data direction registers
