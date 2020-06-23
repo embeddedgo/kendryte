@@ -14,6 +14,10 @@ import (
 
 func main() {
 	irq.GPIO.Enable(rtos.IntPrioLow, 0)
-
 	// WIP...
+}
+
+
+//go:interrupthandler
+func GPIO_Handler() {
 }
