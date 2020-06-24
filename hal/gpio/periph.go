@@ -15,6 +15,8 @@ import (
 	"github.com/embeddedgo/kendryte/p/sysctl"
 )
 
+// Synopsys DW_apb_gpio
+
 type Port struct {
 	dataOutput         mmio.U32
 	direction          mmio.U32

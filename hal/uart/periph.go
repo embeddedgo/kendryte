@@ -15,6 +15,8 @@ import (
 	"github.com/embeddedgo/kendryte/p/sysctl"
 )
 
+// Synopsys DW_apb_uart
+
 // Periph represents UART peripheral.
 type Periph struct {
 	rbr_dll_thr mmio.U32
