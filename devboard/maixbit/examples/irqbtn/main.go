@@ -7,16 +7,18 @@ package main
 import (
 	"embedded/rtos"
 
+	"github.com/embeddedgo/kendryte/hal/gpio"
 	"github.com/embeddedgo/kendryte/hal/irq"
 
 	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
 )
 
 func main() {
-	irq.GPIO.Enable(rtos.IntPrioLow, 0)
-	// WIP...
-}
+	port := gpio.P(0)
+	port.EnableClock()
 
+	irq.GPIO.Enable(rtos.IntPrioLow, 0)
+}
 
 //go:interrupthandler
 func GPIO_Handler() {
