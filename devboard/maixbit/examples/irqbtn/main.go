@@ -6,6 +6,7 @@ package main
 
 import (
 	"embedded/rtos"
+	"time"
 
 	"github.com/embeddedgo/kendryte/hal/fpioa"
 	"github.com/embeddedgo/kendryte/hal/gpio"
@@ -29,11 +30,10 @@ func main() {
 	irq.GPIO.Enable(rtos.IntPrioLow, 0)
 
 	for {
-		if p.DataIn.Load()&gpio.Pin0 != 0 {
-			leds.Green.SetOn()
-		} else {
-			leds.Green.SetOff()
-		}
+		leds.Green.SetOn()
+		time.Sleep(time.Second)
+		leds.Green.SetOff()
+		time.Sleep(time.Second)
 	}
 }
 
