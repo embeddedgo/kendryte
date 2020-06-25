@@ -15,26 +15,46 @@ import (
 	"github.com/embeddedgo/kendryte/p/sysctl"
 )
 
+type Pins uint32
+
+const (
+	Pin0 Pins = 1 << iota
+	Pin1
+	Pin2
+	Pin3
+	Pin4
+	Pin5
+	Pin6
+	Pin7
+)
+
+type PinReg struct{ U32 mmio.U32 }
+
+func (r *PinReg) Load() Pins      { return Pins(r.U32.Load()) }
+func (r *PinReg) Store(pins Pins) { r.U32.Store(uint32(pins)) }
+func (r *PinReg) Set(pins Pins)   { r.U32.SetBits(uint32(pins)) }
+func (r *PinReg) Clear(pins Pins) { r.U32.ClearBits(uint32(pins)) }
+
 // Synopsys DW_apb_gpio
 
 type Port struct {
-	dataOutput         mmio.U32
-	direction          mmio.U32
-	source             mmio.U32
-	_                  [9]uint32
-	interruptEnable    mmio.U32
-	interruptMask      mmio.U32
-	interruptLevel     mmio.U32
-	interruptPolarity  mmio.U32
-	interruptStatus    mmio.U32
-	interruptStatusRaw mmio.U32
-	interruptDebounce  mmio.U32
-	interruptClear     mmio.U32
-	dataInput          mmio.U32
-	_                  [3]uint32
-	syncLevel          mmio.U32
-	idCode             mmio.U32
-	interruptBothedge  mmio.U32
+	DataOut      PinReg // values stored are output on the output pins
+	Dir          PinReg // sets pins as outputs
+	source       uint32
+	_            [9]uint32
+	IntEn        PinReg // enable pins to detect interrupt conditions
+	IntMask      PinReg // disable generateing interrupts by pins
+	IntEdge      PinReg // configure pins as edge sensitive
+	IntPol       PinReg // configure pins as active high level / rising edge
+	IntStatus    PinReg // lists active interrupt requests (IntRaw &^ IntMask)
+	IntRaw       PinReg // lists raw interrupt requests (before masking)
+	IntDebounce  PinReg // require active singal for 2 cycles of gpio_db_clk
+	IntClear     PinReg // clear interrupt requests
+	DataIn       PinReg // value of external signal on input pins
+	_            [3]uint32
+	IntLevelSync PinReg   // sync level-sensitive interrupts to l4_mp_clk
+	IdCode       mmio.U32 // chip identification
+	IntBothEdge  PinReg   // detect both edges on edge sensitive pins
 }
 
 func P(n int) *Port {
@@ -93,32 +113,4 @@ func (p *Port) Reset() {
 	mx.PERI_RESET.Lock()
 	sc.PERI_RESET.ClearBits(sysctl.GPIO_RESET)
 	mx.PERI_RESET.Unlock()
-}
-
-type Pins uint32
-
-const (
-	Pin0 Pins = 1 << iota
-	Pin1
-	Pin2
-	Pin3
-	Pin4
-	Pin5
-	Pin6
-	Pin7
-)
-
-// Load returns input value of all pins.
-func (p *Port) Load() Pins {
-	return Pins(p.dataInput.Load())
-}
-
-// LoadOut returns output value of all pins.
-func (p *Port) LoadOut() Pins {
-	return Pins(p.dataOutput.Load())
-}
-
-// Store sets output value of all pins to value specified by val.
-func (p *Port) Store(val Pins) {
-	p.dataOutput.Store(uint32(val))
 }
