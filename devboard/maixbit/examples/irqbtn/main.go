@@ -39,7 +39,6 @@ func main() {
 
 //go:interrupthandler
 func GPIO_Handler() {
+	gpio.P(0).IntClear.Store(gpio.Pin0)
 	leds.Blue.SetOn()
-	for {
-	}
 }
