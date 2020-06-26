@@ -17,8 +17,17 @@ for p in sysctl fpioa gpio gpiohs uart; do
 done
 
 perlscript='
-s/package irq/$&\n\nimport "embedded\/rtos"/;
 s/ = \d/ rtos.IRQ$&/g;
+s/package irq/$&
+
+import "embedded\/rtos"
+
+const (
+	M0 rtos.IntCtx = 0 \/\/ machine mode on hart 0
+	S0 rtos.IntCtx = 1 \/\/ supervisor mode on hart 0
+	M1 rtos.IntCtx = 2 \/\/ machine mode on hart 1
+	S1 rtos.IntCtx = 3 \/\/ supervisor mode on hart 1
+)/;
 '
 
 cd $hal/irq

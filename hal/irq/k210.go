@@ -8,6 +8,13 @@ package irq
 import "embedded/rtos"
 
 const (
+	M0 rtos.IntCtx = 0 // machine mode on hart 0
+	S0 rtos.IntCtx = 1 // supervisor mode on hart 0
+	M1 rtos.IntCtx = 2 // machine mode on hart 1
+	S1 rtos.IntCtx = 3 // supervisor mode on hart 1
+)
+
+const (
 	SPI0      rtos.IRQ = 1
 	SPI1      rtos.IRQ = 2
 	SPI_SLAVE rtos.IRQ = 3
