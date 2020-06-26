@@ -25,14 +25,16 @@ func main() {
 	p.Reset()
 	p.IntEn.Store(gpio.Pin0)       // enable interrupt detecton on Pin0
 	p.IntEdge.Store(gpio.Pin0)     // configure Pin0 as edge sensitive
-	p.IntDebounce.Store(gpio.Pin0) // enable debouncing on Pin0
+	p.IntDebounce.Store(gpio.Pin0) // enable debouncing (doesn't help much)
 
-	irq.GPIO.Enable(rtos.IntPrioLow, 0)
+	irq.GPIO.Enable(rtos.IntPrioLow, irq.M0)
 
 	for {
 		leds.Green.SetOn()
+		println(leds.Green.Get())
 		time.Sleep(time.Second)
 		leds.Green.SetOff()
+		println(leds.Green.Get())
 		time.Sleep(time.Second)
 	}
 }
@@ -40,5 +42,5 @@ func main() {
 //go:interrupthandler
 func GPIO_Handler() {
 	gpio.P(0).IntClear.Store(gpio.Pin0)
-	leds.Blue.SetOn()
+	leds.Blue.Set(leds.Blue.Get() + 1)
 }
