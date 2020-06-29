@@ -21,18 +21,26 @@ const (
 
 type LED uint8
 
-func (d LED) SetOn()         { fpioa.Pin(d).Clear() }
-func (d LED) SetOff()        { fpioa.Pin(d).Set() }
-func (d LED) Pin() fpioa.Pin { return fpioa.Pin(d) }
+func (d LED) SetOn() {
+	fpioa.Pin(d).Setup(fpioa.CONSTANT | fpioa.DriveH34L23 | fpioa.EnOE |
+		fpioa.InvOE | fpioa.EnIE | fpioa.InvIE)
+}
+
+func (d LED) SetOff() {
+	fpioa.Pin(d).Setup(fpioa.CONSTANT | fpioa.DriveH34L23 | fpioa.EnOE |
+		fpioa.InvOE | fpioa.InvDO | fpioa.EnIE | fpioa.InvIE)
+}
 
 func (d LED) Set(on int) {
-	pin := fpioa.Pin(d)
-	if on&1 == 0 {
-		pin.Set()
+	if on&1 != 0 {
+		d.SetOn()
 	} else {
-		pin.Clear()
+		d.SetOff()
 	}
 }
+
+func (d LED) Get() int       { return fpioa.Pin(d).Load() ^ 1 }
+func (d LED) Pin() fpioa.Pin { return fpioa.Pin(d) }
 
 func init() {
 	Red.SetOff()
