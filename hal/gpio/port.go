@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Package gpio provides interface to configure and control GPIO peripheral.
+// GPIO can controll up to 8 FPIOA pins.
 package gpio
 
 import (
@@ -38,7 +40,7 @@ func (r *PinReg) Clear(pins Pins) { r.U32.ClearBits(uint32(pins)) }
 // Synopsys DW_apb_gpio
 
 type Port struct {
-	DataOut      PinReg // values stored are output on the output pins
+	OutVal       PinReg // values stored are output on the output pins
 	Dir          PinReg // sets pins as outputs
 	source       uint32
 	_            [9]uint32
@@ -50,7 +52,7 @@ type Port struct {
 	IntRaw       PinReg // lists raw interrupt requests (before masking)
 	IntDebounce  PinReg // require active singal for 2 cycles of gpio_db_clk
 	IntClear     PinReg // clear interrupt requests
-	DataIn       PinReg // value of external signal on input pins
+	InpVal       PinReg // values of external signal on input pins
 	_            [3]uint32
 	IntLevelSync PinReg   // sync level-sensitive interrupts to l4_mp_clk
 	IdCode       mmio.U32 // chip identification

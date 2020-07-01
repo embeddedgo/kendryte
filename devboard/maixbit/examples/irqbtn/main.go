@@ -18,7 +18,7 @@ import (
 
 func main() {
 	btn := buttons.User.Pin()
-	btn.Setup(fpioa.GPIO0 | fpioa.EnIE) // set button pin as gpio.Pin0.
+	btn.Setup(fpioa.GPIO0 | fpioa.EnIE) // set button pin as gpio.Pin0
 
 	p := gpio.P(0)
 	p.EnableClock()
@@ -30,11 +30,8 @@ func main() {
 	irq.GPIO.Enable(rtos.IntPrioLow, irq.M0)
 
 	for {
-		leds.Green.SetOn()
-		println(leds.Green.Get())
-		time.Sleep(time.Second)
-		leds.Green.SetOff()
-		println(leds.Green.Get())
+		leds.Green.Set(leds.Green.Get() + 1)
+		println(leds.Green.Get(), p.InpVal.Load())
 		time.Sleep(time.Second)
 	}
 }
