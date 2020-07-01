@@ -21,24 +21,6 @@ func AtomicStoreBits(r *mmio.U32, mask, bits uint32) {
 	}
 }
 
-func AtomicSetBits(r *mmio.U32, mask uint32) {
-	for {
-		old := r.Load()
-		if atomic.CompareAndSwapUint32(
-			(*uint32)(unsafe.Pointer(r)), old, old|mask,
-		) {
-			return
-		}
-	}
-}
-
-func AtomicClearBits(r *mmio.U32, mask uint32) {
-	for {
-		old := r.Load()
-		if atomic.CompareAndSwapUint32(
-			(*uint32)(unsafe.Pointer(r)), old, old&^mask,
-		) {
-			return
-		}
-	}
-}
+func AtomicSetBits(r *mmio.U32, mask uint32)
+func AtomicClearBits(r *mmio.U32, mask uint32)
+func AtomicToggleBits(r *mmio.U32, mask uint32)

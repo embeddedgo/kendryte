@@ -34,8 +34,6 @@ type PinReg struct{ U32 mmio.U32 }
 
 func (r *PinReg) Load() Pins      { return Pins(r.U32.Load()) }
 func (r *PinReg) Store(pins Pins) { r.U32.Store(uint32(pins)) }
-func (r *PinReg) Set(pins Pins)   { r.U32.SetBits(uint32(pins)) }
-func (r *PinReg) Clear(pins Pins) { r.U32.ClearBits(uint32(pins)) }
 
 // Synopsys DW_apb_gpio
 
