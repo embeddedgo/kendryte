@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// This program demonstrates the nested interrupts in action
 package main
 
 import (
@@ -16,7 +17,9 @@ import (
 )
 
 func main() {
-	// configure IRQ pins
+	// We use GPIOHS to generate interrupts by enabling both input and output
+	// functions at the same time and connect them electrically using real FPIOA
+	// pins. You don't need to wire together any pins.
 	cfg := fpioa.EnIE | fpioa.EnOE | fpioa.DriveH8L5
 	fpioa.Pin(10).Setup(fpioa.GPIOHS0 | cfg)
 	fpioa.Pin(11).Setup(fpioa.GPIOHS1 | cfg)
@@ -31,22 +34,22 @@ func main() {
 	p.InpEn.Set(irqPins)
 	p.OutEn.Set(irqPins)
 
-	// clear edge detectors pending bits
+	// clear IRQ pending bits
 	p.FallIP.Store(irqPins)
 	p.RiseIP.Store(irqPins)
 
-	// generate IRQ on both edges
+	// enable generating IRQ on both edges
 	p.FallIE.Set(irqPins)
 	p.RiseIE.Set(irqPins)
 
 	// enable interrupts in PLIC
 	irq.GPIOHS0.Enable(rtos.IntPrioLow, irq.M0)
-	irq.GPIOHS1.Enable(rtos.IntPrioLow, irq.M0)
+	irq.GPIOHS1.Enable(rtos.IntPrioMid, irq.M0)
 
 	for {
 		leds.Red.SetOn()
 		time.Sleep(time.Second)
-		p.OutVal.Toggle(gpiohs.Pin0)
+		p.OutVal.Toggle(gpiohs.Pin0) // generate irq.GPIOHS0
 		time.Sleep(2 * time.Second)
 		leds.Red.SetOff()
 		time.Sleep(time.Second)
@@ -61,7 +64,7 @@ func GPIOHS0_Handler() {
 	for i := 0; i < 3e6; i++ {
 		leds.Green.SetOn()
 	}
-	p.OutVal.Toggle(gpiohs.Pin1)
+	p.OutVal.Toggle(gpiohs.Pin1) // generate irq.GPIOHS1
 	for i := 0; i < 3e6; i++ {
 		leds.Green.SetOn()
 	}
