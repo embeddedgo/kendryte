@@ -62,7 +62,7 @@ func GPIOHS0_Handler() {
 	p.FallIP.Store(gpiohs.Pin0)
 	p.RiseIP.Store(gpiohs.Pin0)
 	for i := 0; i < 3e6; i++ {
-		leds.Green.SetOn()
+		leds.Green.SetOn() // set LED in loop to make some delay
 	}
 	p.OutVal.Toggle(gpiohs.Pin1) // generate irq.GPIOHS1
 	for i := 0; i < 3e6; i++ {
