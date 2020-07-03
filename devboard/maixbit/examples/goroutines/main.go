@@ -5,14 +5,13 @@
 package main
 
 import (
-	"runtime"
 	"time"
 
 	"github.com/embeddedgo/kendryte/devboard/maixbit/board/leds"
 )
 
 func blink(led leds.LED, delay time.Duration) {
-	runtime.LockOSThread()
+	//runtime.LockOSThread()
 	for {
 		led.SetOn()
 		time.Sleep(delay)
