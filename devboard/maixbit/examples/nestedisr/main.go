@@ -21,10 +21,10 @@ func main() {
 	// functions at the same time and connect them electrically using real FPIOA
 	// pins. You don't need to wire together any pins.
 	cfg := fpioa.EnIE | fpioa.EnOE | fpioa.DriveH8L5
-	fpioa.Pin(10).Setup(fpioa.GPIOHS0 | cfg)
-	fpioa.Pin(11).Setup(fpioa.GPIOHS1 | cfg)
+	fpioa.Pin(10).Setup(fpioa.GPIOHS0 | cfg) // map FPIOA.Pin10 as GPIOHS.Pin0
+	fpioa.Pin(11).Setup(fpioa.GPIOHS1 | cfg) // map FPIOA.Pin11 as GPIOHS.Pin1
 
-	p := gpiohs.P(0)
+	p := gpiohs.P(0) // K210 has only one GPIOHS port, but we are ready for more
 	irqPins := gpiohs.Pin0 | gpiohs.Pin1
 
 	// set IRQ pins low
