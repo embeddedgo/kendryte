@@ -18,7 +18,7 @@ func main() {
 	tx.Setup(fpioa.UARTHS_TX | fpioa.DriveH34L23 | fpioa.EnOE)
 
 	u := uarths.UARTHS(1)
-	u.SetConfTx(uarths.TxEn, 2)
+	u.SetTxConf(uarths.TxEn, 2)
 	u.SetBaudrate(1500e3)
 
 	for {

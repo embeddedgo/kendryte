@@ -37,52 +37,44 @@ func (p *Periph) Bus() bus.Bus {
 	return bus.TileLink
 }
 
-type ConfTx uint8
+type RxConf uint16
 
 const (
-	TxEn   ConfTx = 1 << 0
-	Stop2b ConfTx = 1 << 1
+	RxEn RxConf = 1 << 0
 )
 
-func (p *Periph) ConfTx() (c ConfTx, mincnt int) {
-	ctrl := p.txctrl.Load()
-	return ConfTx(ctrl & 3), int(ctrl >> 16 & 7)
+func (p *Periph) RxConf() (c RxConf, maxCnt int) {
+	v := p.rxctrl.Load()
+	return RxConf(v & 0xFFFF), int(v>>16) & 7
 }
 
-func (p *Periph) SetConfTx(c ConfTx, mincnt int) {
-	checkCnt(mincnt)
-	p.txctrl.Store(uint32(c) | uint32(mincnt<<16))
+func (p *Periph) SetRxConf(c RxConf, maxCnt int) {
+	checkCnt(maxCnt)
+	p.rxctrl.Store(uint32(c) | uint32(maxCnt<<16))
 }
 
-// SetTxMinLevel sets the minium level of Tx queue below which the TxMin event
-// is generated.
-func (p *Periph) SetTxMinCnt(mincnt int) {
-	checkCnt(mincnt)
-	p.txctrl.StoreBits(7<<16, uint32(mincnt<<16))
-}
+func (p *Periph) EnableRx()  { p.rxctrl.SetBits(uint32(RxEn)) }
+func (p *Periph) DisableRx() { p.rxctrl.ClearBits(uint32(RxEn)) }
 
-type ConfRx uint8
+type TxConf uint16
 
 const (
-	RxEn ConfRx = 1 << 0
+	TxEn     TxConf = 1 << 0
+	TxStop2b TxConf = 1 << 1
 )
 
-func (p *Periph) ConfRx() (c ConfRx, wm int) {
-	ctrl := p.rxctrl.Load()
-	return ConfRx(ctrl & 1), int(ctrl >> 16 & 7)
+func (p *Periph) TxConf() (c TxConf, minCnt int) {
+	v := p.txctrl.Load()
+	return TxConf(v & 0xFFFF), int(v>>16) & 7
 }
 
-func (p *Periph) SetConfRx(c ConfTx, maxcnt int) {
-	checkCnt(maxcnt)
-	p.rxctrl.Store(uint32(c) | uint32(maxcnt<<16))
+func (p *Periph) SetTxConf(c TxConf, minCnt int) {
+	checkCnt(minCnt)
+	p.txctrl.Store(uint32(c) | uint32(minCnt<<16))
 }
 
-// SetRxMaxCnt sets the maximum level of Rx queue above which the RxMax event
-// is generated.
-func (p *Periph) SetRxMaxCnt(maxcnt int) {
-	checkCnt(maxcnt)
-	p.rxctrl.StoreBits(7<<16, uint32(maxcnt<<16))
-}
+func (p *Periph) EnableTx()  { p.txctrl.SetBits(uint32(TxEn)) }
+func (p *Periph) DisableTx() { p.txctrl.ClearBits(uint32(TxEn)) }
 
 func (p *Periph) Load() (rxd int, ok bool) {
 	d := p.rxd.Load()
@@ -112,11 +104,11 @@ func (p *Periph) SetBaudrate(br int) {
 type Event uint8
 
 const (
-	TxMin Event = 1 << 0
-	RxMax Event = 1 << 1
+	TxMin Event = 1 << 0 // raised if len(Tx FIFO) < minCnt
+	RxMax Event = 1 << 1 // raised if len(Rx FIFO) > maxCnt
 )
 
-func (p *Periph) Event() Event {
+func (p *Periph) Events() Event {
 	return Event(p.ip.Load())
 }
 
