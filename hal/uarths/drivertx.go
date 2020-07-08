@@ -12,6 +12,16 @@ import (
 
 const txMin = 1 // to minmize number of IRQs, can be >1 to ensure Tx continuity
 
+func (d *Driver) EnableTx() {
+	cfg, _ := d.p.TxConf()
+	d.p.SetTxConf(cfg|TxEn, 0)
+}
+
+func (d *Driver) DisableTx() {
+	cfg, _ := d.p.TxConf()
+	d.p.SetTxConf(cfg&^TxEn, 0)
+}
+
 // WriteString works like Write but accepts string instead of byte slice.
 func (d *Driver) WriteString(s string) (n int, err error) {
 	if len(s) == 0 {
@@ -22,7 +32,7 @@ func (d *Driver) WriteString(s string) (n int, err error) {
 		if d.p.TxFull() {
 			break
 		}
-		d.p.Store(int(d.txdata[n]))
+		d.p.Store(int(s[n]))
 		if n++; n == len(s) {
 			return
 		}
@@ -37,12 +47,10 @@ func (d *Driver) WriteString(s string) (n int, err error) {
 		m = 7
 	}
 	d.txdone.Clear()
-	cfg, _ := d.p.TxConf()
-	d.p.SetTxConf(cfg|TxEn, m)
+	d.p.SetTxMinCnt(m)
 	d.p.EnableIRQ(TxMin)
 	if !d.txdone.Sleep(d.timeoutTx) {
-		cfg, _ := d.p.TxConf()
-		d.p.SetTxConf(cfg&^TxEn, 0)
+		d.p.SetTxMinCnt(0)
 		d.txdata = d.txdata[:0]
 		for atomic.LoadUint32(&d.isr) == isrTx {
 			runtime.Gosched()
@@ -69,4 +77,13 @@ func (d *Driver) WriteByte(b byte) (err error) {
 	}{&b, 1}
 	_, err = d.WriteString(*(*string)(unsafe.Pointer(&s)))
 	return
+}
+
+func (d *Driver) Flush() error {
+	d.p.SetTxMinCnt(1)
+	for d.p.Events()&TxMin == 0 {
+		runtime.Gosched()
+	}
+	d.p.SetTxMinCnt(0)
+	return nil
 }

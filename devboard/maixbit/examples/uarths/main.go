@@ -5,11 +5,16 @@
 package main
 
 import (
+	"embedded/rtos"
+
 	"github.com/embeddedgo/kendryte/hal/fpioa"
+	"github.com/embeddedgo/kendryte/hal/irq"
 	"github.com/embeddedgo/kendryte/hal/uarths"
 
 	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
 )
+
+var u *uarths.Driver
 
 func main() {
 	rx := fpioa.Pin(4)
@@ -17,23 +22,26 @@ func main() {
 	rx.Setup(fpioa.UARTHS_RX | fpioa.EnIE | fpioa.Schmitt)
 	tx.Setup(fpioa.UARTHS_TX | fpioa.DriveH34L23 | fpioa.EnOE)
 
-	u := uarths.UARTHS(1)
-	u.SetTxConf(uarths.TxEn, 2)
-	u.SetBaudrate(1500e3)
+	u = uarths.NewDriver(uarths.UARTHS(1))
+	u.SetBaudrate(9600)
+	u.EnableTx()
+
+	p := u.Periph()
+	for {
+		_, ok := p.Load()
+		if !ok {
+			break
+		}
+	}
+
+	irq.UARTHS.Enable(rtos.IntPrioLow, irq.M0)
 
 	for {
-		puts(u, "Hello, World!\r\n")
+		u.WriteString("*0123456789abcdef0123456789abcdef0123456789abcdef0*\r\n")
 	}
 }
 
-func putc(u *uarths.Periph, c byte) {
-	for u.TxFull() {
-	}
-	u.Store(int(c))
-}
-
-func puts(u *uarths.Periph, s string) {
-	for i := 0; i < len(s); i++ {
-		putc(u, s[i])
-	}
+//go:interrupthandler
+func UARTHS_Handler() {
+	u.ISR()
 }

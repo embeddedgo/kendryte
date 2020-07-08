@@ -53,6 +53,11 @@ func (p *Periph) SetRxConf(c RxConf, maxCnt int) {
 	p.rxctrl.Store(uint32(c) | uint32(maxCnt<<16))
 }
 
+func (p *Periph) SetRxMaxCnt(maxCnt int) {
+	checkCnt(maxCnt)
+	p.rxctrl.StoreBits(7<<16, uint32(maxCnt<<16))
+}
+
 func (p *Periph) EnableRx()  { p.rxctrl.SetBits(uint32(RxEn)) }
 func (p *Periph) DisableRx() { p.rxctrl.ClearBits(uint32(RxEn)) }
 
@@ -71,6 +76,11 @@ func (p *Periph) TxConf() (c TxConf, minCnt int) {
 func (p *Periph) SetTxConf(c TxConf, minCnt int) {
 	checkCnt(minCnt)
 	p.txctrl.Store(uint32(c) | uint32(minCnt<<16))
+}
+
+func (p *Periph) SetTxMinCnt(minCnt int) {
+	checkCnt(minCnt)
+	p.txctrl.StoreBits(7<<16, uint32(minCnt<<16))
 }
 
 func (p *Periph) EnableTx()  { p.txctrl.SetBits(uint32(TxEn)) }

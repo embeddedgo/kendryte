@@ -68,11 +68,31 @@ const (
 
 // NewDriver returns a new driver for p.
 func NewDriver(p *Periph) *Driver {
+	p.DisableIRQ(TxMin | RxMax)
+	p.SetTxConf(0, 0)
+	p.SetRxConf(0, 0)
 	return &Driver{p: p, timeoutRx: -1, timeoutTx: -1}
 }
 
 func (d *Driver) Periph() *Periph {
 	return d.p
+}
+
+func (d *Driver) SetStopBits(n int) {
+	cfg, _ := d.p.TxConf()
+	switch n {
+	case 1:
+		cfg &^= TxStop2b
+	case 2:
+		cfg |= TxStop2b
+	default:
+		panic("uarths: support only 1 or 2 stop bits")
+	}
+	d.p.SetTxConf(cfg, 0)
+}
+
+func (d *Driver) SetBaudrate(br int) {
+	d.p.SetBaudrate(br)
 }
 
 // SetReadTimeout sets the read timeout used by Read* functions.
@@ -109,11 +129,10 @@ func (d *Driver) ISR() {
 		}
 		atomic.StoreUint32(&d.isr, isrNone)
 	}
-	if d.p.Events()&TxMin == 0 {
+	if d.p.Events()&TxMin != 0 {
 		atomic.StoreUint32(&d.isr, isrTx)
 		if d.txn >= len(d.txdata) {
-			cfg, _ := d.p.TxConf()
-			d.p.SetTxConf(cfg&^TxEn, 0)
+			d.p.SetTxMinCnt(0)
 			d.txdone.Wakeup()
 		} else {
 			for {
@@ -122,8 +141,7 @@ func (d *Driver) ISR() {
 						if m > 7 {
 							m = 7
 						}
-						cfg, _ := d.p.TxConf()
-						d.p.SetTxConf(cfg, m)
+						d.p.SetTxMinCnt(m)
 					}
 					break
 				}
