@@ -100,11 +100,12 @@ func (p *Periph) TxFull() bool {
 }
 
 func (p *Periph) Baudrate() int {
-	return int(bus.TileLink.Clock() / int64(p.brdiv.Load()+1))
+	div := int64(p.brdiv.Load() + 1)
+	return int((bus.TileLink.Clock() + div/2) / div)
 }
 
 func (p *Periph) SetBaudrate(br int) {
-	div := bus.TileLink.Clock() / int64(br)
+	div := (bus.TileLink.Clock() + int64(br/2)) / int64(br)
 	if div < 16 || div > 1<<16 {
 		panic("uarths: bad baudrate")
 	}

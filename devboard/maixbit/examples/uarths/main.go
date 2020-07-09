@@ -6,6 +6,8 @@ package main
 
 import (
 	"embedded/rtos"
+	"fmt"
+	"time"
 
 	"github.com/embeddedgo/kendryte/hal/fpioa"
 	"github.com/embeddedgo/kendryte/hal/irq"
@@ -23,7 +25,7 @@ func main() {
 	tx.Setup(fpioa.UARTHS_TX | fpioa.DriveH34L23 | fpioa.EnOE)
 
 	u = uarths.NewDriver(uarths.UARTHS(1))
-	u.SetBaudrate(9600)
+	u.SetBaudrate(2097152)
 	u.EnableTx()
 
 	p := u.Periph()
@@ -36,8 +38,20 @@ func main() {
 
 	irq.UARTHS.Enable(rtos.IntPrioLow, irq.M0)
 
+	n := 40
+	s := "00000000001111111111222222222233333333334444444444555555555566666666667777777777\r\n"
+	br := u.Periph().Baudrate()
 	for {
-		u.WriteString("*0123456789abcdef0123456789abcdef0123456789abcdef0*\r\n")
+		t := time.Now()
+		for i := 0; i < n; i++ {
+			u.WriteString(s)
+		}
+		dt := int(time.Now().Sub(t))
+		lps := (n*1e9 + dt/2) / dt
+		bps := (n*len(s)*1e9 + dt/2) / dt
+		fmt.Fprintf(u, "br: %d b/s (%d B/s),  speed: %d line/s (%d B/s)\r\n",
+			br, br/8, lps, bps)
+		time.Sleep(2 * time.Second)
 	}
 }
 

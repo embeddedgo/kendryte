@@ -40,7 +40,7 @@ func (d *Driver) WriteString(s string) (n int, err error) {
 	// the remaining part will be written by ISR
 	d.txdata = s
 	d.txn = n
-	m := 9 - n
+	m := 9 - (len(s) - n)
 	if m < txMin {
 		m = txMin
 	} else if m > 7 {
@@ -50,7 +50,7 @@ func (d *Driver) WriteString(s string) (n int, err error) {
 	d.p.SetTxMinCnt(m)
 	d.p.EnableIRQ(TxMin)
 	if !d.txdone.Sleep(d.timeoutTx) {
-		d.p.SetTxMinCnt(0)
+		d.p.SetTxMinCnt(0) // disable TxMin events
 		d.txdata = d.txdata[:0]
 		for atomic.LoadUint32(&d.isr) == isrTx {
 			runtime.Gosched()

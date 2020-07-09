@@ -34,6 +34,19 @@ func (e DriverError) Error() string {
 	return ""
 }
 
+// Driver is an interrupt based driver for UARTHS peripheral.
+//
+// Set the read timeout to ensure wake-up in case of missing data. The UARTHS
+// hardware can not detect any Rx errors so the reader can sleep forever waiting
+// for byte lost due to some error. Consider also the remote party can reset
+// unexpectedly and depending on the protocol used it can wait quietly for some
+// request or initialization sequence.
+//
+// The write operation is always successful in a finite time (the UARTHS does
+// not support hardware flow controll).
+//
+// The driver supports one reading goroutine and one writing goroutine that both
+// can work concurrently with the driver.
 type Driver struct {
 	p *Periph
 
@@ -42,8 +55,8 @@ type Driver struct {
 	nextr    uint32
 	nextw    uint32
 	rxcmd    uint32
-	rxready  rtos.Note
 	overflow bool
+	rxready  rtos.Note
 
 	// tx state
 	txdata string
@@ -107,6 +120,7 @@ func (d *Driver) SetWriteTimeout(timeout time.Duration) {
 
 // ISR handles UARTHS interrupts.
 func (d *Driver) ISR() {
+	// rx
 	if b, ok := d.p.Load(); ok {
 		atomic.StoreUint32(&d.isr, isrRx)
 		for {
@@ -129,15 +143,16 @@ func (d *Driver) ISR() {
 		}
 		atomic.StoreUint32(&d.isr, isrNone)
 	}
+	// tx
 	if d.p.Events()&TxMin != 0 {
 		atomic.StoreUint32(&d.isr, isrTx)
 		if d.txn >= len(d.txdata) {
-			d.p.SetTxMinCnt(0)
+			d.p.SetTxMinCnt(0) // disable TxMin events
 			d.txdone.Wakeup()
 		} else {
 			for {
 				if d.p.TxFull() {
-					if m := 9 - d.txn; m > txMin {
+					if m := 9 - (len(d.txdata) - d.txn); m > txMin {
 						if m > 7 {
 							m = 7
 						}
