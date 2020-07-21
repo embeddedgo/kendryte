@@ -79,11 +79,26 @@ const (
 	isrTx
 )
 
+func clearRxFIFO(p *Periph) {
+	for {
+		if _, ok := p.Load(); !ok {
+			break
+		}
+	}
+	time.Sleep(time.Millisecond)
+	for {
+		if _, ok := p.Load(); !ok {
+			break
+		}
+	}
+}
+
 // NewDriver returns a new driver for p.
 func NewDriver(p *Periph) *Driver {
-	p.DisableIRQ(TxMin | RxMax)
-	p.SetTxConf(0, 0)
 	p.SetRxConf(0, 0)
+	p.SetTxConf(0, 0)
+	p.DisableIRQ(TxMin | RxMax)
+	clearRxFIFO(p)
 	return &Driver{p: p, timeoutRx: -1, timeoutTx: -1}
 }
 

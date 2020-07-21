@@ -47,11 +47,7 @@ func (d *Driver) EnableRx(rxbuf []byte) {
 func (d *Driver) DisableRx() (rxbuf []byte) {
 	d.p.SetRxConf(0, 0)
 	d.p.DisableIRQ(RxMax)
-	for {
-		if _, ok := d.p.Load(); !ok {
-			break
-		}
-	}
+	clearRxFIFO(d.p)
 	for atomic.LoadUint32(&d.isr) == isrRx {
 		runtime.Gosched()
 	}

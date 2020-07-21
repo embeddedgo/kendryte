@@ -28,14 +28,6 @@ func main() {
 	u.SetBaudrate(2097152)
 	u.EnableTx()
 
-	p := u.Periph()
-	for {
-		_, ok := p.Load()
-		if !ok {
-			break
-		}
-	}
-
 	irq.UARTHS.Enable(rtos.IntPrioLow, irq.M0)
 
 	n := 40
