@@ -2,7 +2,7 @@
 
 // +build k210
 
-// Package timer provides access to the registers of the TIMER0 peripheral.
+// Package timer provides access to the registers of the TIMER peripheral.
 //
 // Instances:
 //  TIMER0  TIMER0_BASE  APB0  TIMER0A,TIMER0B  Timer 0

@@ -2,7 +2,7 @@
 
 // +build k210
 
-// Package uart provides access to the registers of the UART1 peripheral.
+// Package uart provides access to the registers of the UART peripheral.
 //
 // Instances:
 //  UART1  UART1_BASE  APB0  UART1  Universal Asynchronous Receiver-Transmitter 1

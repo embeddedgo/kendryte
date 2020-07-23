@@ -2,7 +2,7 @@
 
 // +build k210
 
-// Package spi provides access to the registers of the SPI0 peripheral.
+// Package spi provides access to the registers of the SPI peripheral.
 //
 // Instances:
 //  SPI0  SPI0_BASE  APB2  SPI0  Serial Peripheral Interface 0 (master)
