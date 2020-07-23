@@ -9,11 +9,12 @@
 //  TIMER1  TIMER1_BASE  APB0  TIMER1A,TIMER1B  Timer 1
 //  TIMER2  TIMER2_BASE  APB0  TIMER2A,TIMER2B  Timer 2
 // Registers:
-//  0x000 32  CH{LOAD,CURRENT,CONTROL,EOI,INTSTAT}[4]  Channel status/control registers
+//  0x000 32  CH{LOAD,CURRENT,CONTROL,EOI,INTSTAT}[4]  Load Count Register; Current Value Register; Control Register; Interrupt Clear Register; Interrupt Status Register
 //  0x0A0 32  INTSTAT_ALL                              Interrupt Status Register
 //  0x0A4 32  EOI_ALL                                  Interrupt Clear Register
 //  0x0A8 32  RAW_INTSTAT_ALL                          Raw Interrupt Status Register
 //  0x0AC 32  COMP_VERSION                             Component Version Register
+//  0x0B0 32  LOAD_COUNT2[4]                           Load Count2 Register
 // Import:
 //  github.com/embeddedgo/kendryte/p/bus
 //  github.com/embeddedgo/kendryte/p/mmap

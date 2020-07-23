@@ -19,6 +19,7 @@ type Periph struct {
 	EOI_ALL         REOI_ALL
 	RAW_INTSTAT_ALL RRAW_INTSTAT_ALL
 	COMP_VERSION    RCOMP_VERSION
+	LOAD_COUNT2     [4]RLOAD_COUNT2
 }
 
 func TIMER0() *Periph { return (*Periph)(unsafe.Pointer(uintptr(mmap.TIMER0_BASE))) }
@@ -208,3 +209,21 @@ type RMCOMP_VERSION struct{ mmio.UM32 }
 
 func (rm RMCOMP_VERSION) Load() COMP_VERSION   { return COMP_VERSION(rm.UM32.Load()) }
 func (rm RMCOMP_VERSION) Store(b COMP_VERSION) { rm.UM32.Store(uint32(b)) }
+
+type LOAD_COUNT2 uint32
+
+type RLOAD_COUNT2 struct{ mmio.U32 }
+
+func (r *RLOAD_COUNT2) LoadBits(mask LOAD_COUNT2) LOAD_COUNT2 {
+	return LOAD_COUNT2(r.U32.LoadBits(uint32(mask)))
+}
+func (r *RLOAD_COUNT2) StoreBits(mask, b LOAD_COUNT2) { r.U32.StoreBits(uint32(mask), uint32(b)) }
+func (r *RLOAD_COUNT2) SetBits(mask LOAD_COUNT2)      { r.U32.SetBits(uint32(mask)) }
+func (r *RLOAD_COUNT2) ClearBits(mask LOAD_COUNT2)    { r.U32.ClearBits(uint32(mask)) }
+func (r *RLOAD_COUNT2) Load() LOAD_COUNT2             { return LOAD_COUNT2(r.U32.Load()) }
+func (r *RLOAD_COUNT2) Store(b LOAD_COUNT2)           { r.U32.Store(uint32(b)) }
+
+type RMLOAD_COUNT2 struct{ mmio.UM32 }
+
+func (rm RMLOAD_COUNT2) Load() LOAD_COUNT2   { return LOAD_COUNT2(rm.UM32.Load()) }
+func (rm RMLOAD_COUNT2) Store(b LOAD_COUNT2) { rm.UM32.Store(uint32(b)) }
