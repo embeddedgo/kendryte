@@ -7,7 +7,6 @@ package mmap
 
 const (
 	SPI2_BASE uintptr = 0x50240000 // Serial Peripheral Interface 2 (slave)
-	SPI3_BASE uintptr = 0x54000000 // Serial Peripheral Interface 3 (master)
 )
 
 // AES
@@ -88,6 +87,7 @@ const (
 const (
 	SPI0_BASE uintptr = 0x52000000 // Serial Peripheral Interface 0 (master)
 	SPI1_BASE uintptr = 0x53000000 // Serial Peripheral Interface 1 (master)
+	SPI3_BASE uintptr = 0x54000000 // Serial Peripheral Interface 3 (master)
 )
 
 // SYSCTL
