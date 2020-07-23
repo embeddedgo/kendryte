@@ -25,15 +25,17 @@ func main() {
 	tx.Setup(fpioa.UARTHS_TX | fpioa.DriveH34L23 | fpioa.EnOE)
 
 	u = uarths.NewDriver(uarths.UARTHS(1))
-	u.SetBaudrate(2097152)
+	u.SetBaudrate(750e3)
 	u.EnableTx()
+	u.EnableRx(nil)
 
 	irq.UARTHS.Enable(rtos.IntPrioLow, irq.M0)
 
 	n := 40
-	s := "00000000001111111111222222222233333333334444444444555555555566666666667777777777\r\n"
+	s := "00000000001111111111222222222233333333334444444444" +
+		"555555555566666666667777777777\r\n"
 	br := u.Periph().Baudrate()
-	for {
+	for k := 0; k < 0; k++ {
 		t := time.Now()
 		for i := 0; i < n; i++ {
 			u.WriteString(s)
@@ -45,6 +47,20 @@ func main() {
 			br, br/8, lps, bps)
 		time.Sleep(2 * time.Second)
 	}
+
+	buf := make([]byte, 128)
+	for {
+		n, err := u.Read(buf)
+		if n != 0 {
+			u.WriteString("inp: ")
+			u.Write(buf[:n])
+			u.WriteString("\r\n")
+		}
+		if err != nil {
+			u.WriteString("err: " + err.Error() + "\r\n")
+		}
+	}
+
 }
 
 //go:interrupthandler

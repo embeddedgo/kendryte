@@ -18,19 +18,22 @@ func (d *Driver) Len() int {
 	return n
 }
 
-// EnableRx enables the UARTHS receiver using the provided slice to buffer
-// received data. At least 2-byte buffer is required, which is effectively one
-// byte buffer because the other byte always remains unused for efficient
-// checking of an empty state. You can not rely on 7-byte hardware buffer as
-// extension of software buffer because for the performance reasons the ISR do
-// not return until it reads all bytes from hardware. If the software buffer is
-// full the ISR simply drops read bytes until there is no more data to read.
-// EnableRx panics if the receiving is already enabled or rxbuf is too short.
+// EnableRx enables the UARTHS receiver. If rxbuf is not nil the Driver uses the
+// provided slice to buffer received data. Othewrise it allocates a small buffer
+// itself. At least 2-byte buffer is required, which is effectively one byte
+// buffer because the other byte always remains unused for efficient checking of
+// an empty state. You cannot rely on 8-byte hardware buffer as extension of the
+// software buffer because for the performance reasons the ISR will not return
+// until it has read all bytes from hardware. If the software buffer is full the
+// ISR simply drops read bytes until there is no more data to read. EnableRx
+// panics if the receiving is already enabled or rxbuf is too short.
 func (d *Driver) EnableRx(rxbuf []byte) {
 	if d.rxbuf != nil {
 		panic("uarths: enabled before")
 	}
-	if len(rxbuf) < 2 {
+	if rxbuf == nil {
+		rxbuf = make([]byte, 128)
+	} else if len(rxbuf) < 2 {
 		panic("uarths: rxbuf too short")
 	}
 	d.rxbuf = rxbuf
@@ -39,14 +42,15 @@ func (d *Driver) EnableRx(rxbuf []byte) {
 	cfg, _ := d.p.RxConf()
 	cfg |= RxEn
 	d.p.SetRxConf(cfg, 0)
+	d.p.EnableIRQ(RxMax)
 }
 
 // DisableRx disables the UART receiver. The receive buffer is returned and no
 // longer referenced by driver. You can use the Periph.DisableRx if you want to
 // temporary disable the receiver leaving the driver intact.
 func (d *Driver) DisableRx() (rxbuf []byte) {
-	d.p.SetRxConf(0, 0)
 	d.p.DisableIRQ(RxMax)
+	d.p.SetRxConf(0, 0)
 	clearRxFIFO(d.p)
 	for atomic.LoadUint32(&d.isr) == isrRx {
 		runtime.Gosched()
@@ -88,8 +92,7 @@ func (d *Driver) markDataRead(nextr int) error {
 		nextr -= len(d.rxbuf)
 	}
 	atomic.StoreUint32(&d.nextr, uint32(nextr))
-	if d.overflow {
-		d.overflow = false
+	if atomic.CompareAndSwapUint32(&d.overflow, 1, 0) {
 		return ErrBufOverflow
 	}
 	return nil

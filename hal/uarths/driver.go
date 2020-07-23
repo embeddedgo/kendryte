@@ -55,7 +55,7 @@ type Driver struct {
 	nextr    uint32
 	nextw    uint32
 	rxcmd    uint32
-	overflow bool
+	overflow uint32
 	rxready  rtos.Note
 
 	// tx state
@@ -150,7 +150,7 @@ func (d *Driver) ISR() {
 					d.rxready.Wakeup()
 				}
 			} else {
-				d.overflow = true
+				atomic.StoreUint32(&d.overflow, 1)
 			}
 			if b, ok = d.p.Load(); !ok {
 				break
