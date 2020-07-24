@@ -41,7 +41,7 @@ func (d *Driver) EnableRx(rxbuf []byte) {
 	d.nextw = 0
 	cfg, _ := d.p.RxConf()
 	cfg |= RxEn
-	d.p.SetRxConf(cfg, 0)
+	d.p.SetRxConf(cfg, 3) // RxMax interrupt on half buffer (4 bytes)
 	d.p.EnableIRQ(RxMax)
 }
 
@@ -74,17 +74,21 @@ func (d *Driver) waitRxData() int {
 		}
 		return int(nextw)
 	}
+	d.p.SetRxMaxCnt(0) // RxMax interrupt after first received byte
 	if !d.rxready.Sleep(d.timeoutRx) {
 		if atomic.SwapUint32(&d.rxcmd, cmdNone) != cmdNone {
-			return int(nextw)
+			goto end
 		}
 		d.rxready.Sleep(-1) // wait for the upcoming wake up
 	}
 	nextw = atomic.LoadUint32(&d.nextw)
 	if nextw != d.nextr {
-		return int(nextw)
+		goto end
 	}
 	panic("uarths: wakeup on empty buffer")
+end:
+	d.p.SetRxMaxCnt(3) // RxMax interrupt on half buffer (4 bytes)
+	return int(nextw)
 }
 
 func (d *Driver) markDataRead(nextr int) error {

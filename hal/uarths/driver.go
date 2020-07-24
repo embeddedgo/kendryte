@@ -38,7 +38,7 @@ func (e DriverError) Error() string {
 //
 // Set the read timeout to ensure wake-up in case of missing data. The UARTHS
 // hardware can not detect any Rx errors so the reader can sleep forever waiting
-// for byte lost due to some error. Consider also the remote party can reset
+// for a byte lost due to some error. Consider also the remote party can reset
 // unexpectedly and depending on the protocol used it can wait quietly for some
 // request or initialization sequence.
 //
