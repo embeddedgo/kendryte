@@ -4,21 +4,21 @@
 
 package timer
 
-type DriverPWM struct {
+type PWM struct {
 	*Channel
 }
 
-func PWM(ch *Channel) *DriverPWM {
-	return &DriverPWM{Channel: ch}
+func NewPWM(ch *Channel) *PWM {
+	return &PWM{Channel: ch}
 }
 
-func (d *DriverPWM) Enable() {
+func (d *PWM) Enable() {
 	d.Periph().EnableClock()
 
-	d.control.SetBits(PWM_ENABLE | ENABLE | USER | INTERRUPT)
+	d.control.SetBits(pwmEnable | enable | userMode | interruptMask)
 }
 
-func (d *DriverPWM) SetFrequency(frequency float64, duty float64) {
+func (d *PWM) SetFrequency(frequency float64, duty float64) {
 	clk := float64(d.Periph().Bus().Clock() * 2)
 
 	if frequency < 0 || frequency > 2147483647 {
