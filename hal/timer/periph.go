@@ -15,12 +15,11 @@ import (
 )
 
 const (
-	ENABLE     uint32 = 0x01 << 0 //+ ENABLE
-	MODE       uint32 = 0x01 << 1 //+ MODE
-	FREE       uint32 = 0x00 << 1 //  FREE_MODE
-	USER       uint32 = 0x01 << 1 //  USER_MODE
-	INTERRUPT  uint32 = 0x01 << 2 //+ INTERRUPT_MASK
-	PWM_ENABLE uint32 = 0x01 << 3 //+ PWM_ENABLE
+	enable        uint32 = 0x01 << 0
+	freeMode      uint32 = 0x00 << 1
+	userMode      uint32 = 0x01 << 1
+	interruptMask uint32 = 0x01 << 2
+	pwmEnable     uint32 = 0x01 << 3
 )
 
 type Periph struct {
@@ -80,21 +79,8 @@ func (p *Periph) DisableClock() {
 	mx.CLK_EN_CENT.Unlock()
 }
 
-func (p *Periph) SetInterval(ch int, nanoseconds int64) {
-	clk := p.Bus().Clock()
-
-	step := 1e9 / clk
-	period := uint32(nanoseconds / step)
-
-	if period < 0 || period > 2147483647 {
-		panic("timer: period outside of 32bit range")
-	}
-
-	p.ch[ch].load_count.Store(period)
-}
-
-func (p *Periph) ClearIRQ(ch int) {
-	p.ch[ch].eoi.Load()
+func (p *Periph) ClearIRQ() {
+	p.eoi.Load()
 }
 
 func (p *Periph) Channel(ch int) *Channel {
@@ -144,12 +130,12 @@ func (c *Channel) EnableIRQ() {
 	c.ClearIRQ()
 
 	// Enable timer in user mode, unset interrupt mask if it was set
-	c.control.SetBits(ENABLE | USER)
-	c.control.ClearBits(INTERRUPT)
+	c.control.SetBits(enable | userMode)
+	c.control.ClearBits(interruptMask)
 }
 
 func (c *Channel) DisableIRQ() {
-	c.control.SetBits(INTERRUPT)
+	c.control.SetBits(interruptMask)
 }
 
 func (c *Channel) ClearIRQ() {
