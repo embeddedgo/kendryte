@@ -5,31 +5,23 @@
 package main
 
 import (
-	"embedded/rtos"
 	"fmt"
 	"time"
 
 	"github.com/embeddedgo/kendryte/hal/fpioa"
-	"github.com/embeddedgo/kendryte/hal/irq"
 	"github.com/embeddedgo/kendryte/hal/uarths"
+	"github.com/embeddedgo/kendryte/hal/uarths/uart0"
 
 	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
 )
 
-var u *uarths.Driver
-
 func main() {
-	rx := fpioa.Pin(4)
-	tx := fpioa.Pin(5)
-	rx.Setup(fpioa.UARTHS_RX | fpioa.EnIE | fpioa.Schmitt)
-	tx.Setup(fpioa.UARTHS_TX | fpioa.DriveH34L23 | fpioa.EnOE)
-
-	u = uarths.NewDriver(uarths.UARTHS(1))
+	u := uart0.Driver()
+	u.UsePin(fpioa.Pin(4), uarths.RXD)
+	u.UsePin(fpioa.Pin(5), uarths.TXD)
 	u.SetBaudrate(750e3) // 750 kbaud, reduce it to 115200 baud if too fast
 	u.EnableTx()
 	u.EnableRx(nil)
-
-	irq.UARTHS.Enable(rtos.IntPrioLow, irq.M0)
 
 	u.WriteString("\r\nWrite speed test...\r\n\n")
 	time.Sleep(time.Second)
@@ -68,9 +60,4 @@ func main() {
 		}
 	}
 
-}
-
-//go:interrupthandler
-func UARTHS_Handler() {
-	u.ISR()
 }
