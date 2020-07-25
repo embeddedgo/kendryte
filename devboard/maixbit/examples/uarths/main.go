@@ -10,13 +10,13 @@ import (
 
 	"github.com/embeddedgo/kendryte/hal/fpioa"
 	"github.com/embeddedgo/kendryte/hal/uarths"
-	"github.com/embeddedgo/kendryte/hal/uarths/uart0"
+	"github.com/embeddedgo/kendryte/hal/uarths/uarths0"
 
 	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
 )
 
 func main() {
-	u := uart0.Driver()
+	u := uarths0.Driver()
 	u.UsePin(fpioa.Pin(4), uarths.RXD)
 	u.UsePin(fpioa.Pin(5), uarths.TXD)
 	u.SetBaudrate(750e3) // 750 kbaud, reduce it to 115200 baud if too fast

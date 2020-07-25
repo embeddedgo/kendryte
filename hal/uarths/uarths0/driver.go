@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package uart0
+package uarths0
 
 import (
 	"embedded/rtos"
@@ -17,7 +17,7 @@ var driver *uarths.Driver
 // Driver returns a ready to use driver for UARTHS peripheral.
 func Driver() *uarths.Driver {
 	if driver == nil {
-		driver = uarths.NewDriver(uarths.UART(0))
+		driver = uarths.NewDriver(uarths.UARTHS(0))
 		irq.UARTHS.Enable(rtos.IntPrioLow, irq.M0)
 	}
 	return driver
