@@ -16,23 +16,15 @@ import (
 )
 
 var p *timer.Periph
-var tickCount uint64
-
-//go:interrupthandler
-func TIMER0A_Handler() {
-	// Clear the interrupt once we're done with it
-	p.Channel(0).ClearIRQ()
-
-	tickCount++
-}
+var r, g, b *timer.PWM
 
 func main() {
 	freq := 100.0 // Hz
 
 	// Pin assignment
-	ch1 := fpioa.Pin(leds.Red)
-	ch2 := fpioa.Pin(leds.Green)
-	ch3 := fpioa.Pin(leds.Blue)
+	ch1 := leds.Red.Pin()
+	ch2 := leds.Green.Pin()
+	ch3 := leds.Blue.Pin()
 	ch1.Setup(fpioa.TIMER0_TOGGLE1 | fpioa.EnOE | fpioa.DriveH34L23)
 	ch2.Setup(fpioa.TIMER0_TOGGLE2 | fpioa.EnOE | fpioa.DriveH34L23)
 	ch3.Setup(fpioa.TIMER0_TOGGLE3 | fpioa.EnOE | fpioa.DriveH34L23)
@@ -41,9 +33,9 @@ func main() {
 	p = timer.TIMER(0)
 
 	// Driver instance
-	r := timer.NewPWM(p.Channel(0))
-	g := timer.NewPWM(p.Channel(1))
-	b := timer.NewPWM(p.Channel(2))
+	r = timer.NewPWM(p.Channel(0))
+	g = timer.NewPWM(p.Channel(1))
+	b = timer.NewPWM(p.Channel(2))
 
 	// Set frequency now so we don't have to wait around for the first period to expire
 	r.SetFrequency(freq, .5)
@@ -70,4 +62,12 @@ func main() {
 		b.SetFrequency(freq, math.Abs(math.Cos(dc)))
 		dc += 0.02
 	}
+}
+
+//go:interrupthandler
+func TIMER0A_Handler() {
+	// Clear the interrupt once we're done with it
+	r.ClearIRQ()
+
+	// ...you should probably do something useful here
 }
