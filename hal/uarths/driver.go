@@ -8,6 +8,8 @@ import (
 	"embedded/rtos"
 	"sync/atomic"
 	"time"
+
+	"github.com/embeddedgo/kendryte/hal/fpioa"
 )
 
 type DriverError uint8
@@ -182,5 +184,23 @@ func (d *Driver) ISR() {
 			}
 		}
 		atomic.StoreUint32(&d.isr, isrNone)
+	}
+}
+
+// Signal represents UARTHS signal.
+type Signal uint8
+
+const (
+	TXD Signal = iota
+	RXD
+)
+
+// UsePin configurs the specified pin to be used as signal sig.
+func (d *Driver) UsePin(pin fpioa.Pin, sig Signal) {
+	switch sig {
+	case TXD:
+		pin.Setup(fpioa.UARTHS_TX | fpioa.DriveH34L23 | fpioa.EnOE)
+	case RXD:
+		pin.Setup(fpioa.UARTHS_RX | fpioa.EnIE | fpioa.Schmitt)
 	}
 }
