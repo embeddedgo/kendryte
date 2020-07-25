@@ -79,7 +79,7 @@ func (p *Periph) DisableClock() {
 	mx.CLK_EN_CENT.Unlock()
 }
 
-func (p *Periph) ClearIRQ() {
+func (p *Periph) ClearIRQs() {
 	p.eoi.Load()
 }
 
