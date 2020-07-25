@@ -9,7 +9,7 @@ import (
 	"math"
 	"time"
 
-	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
+	"github.com/embeddedgo/kendryte/devboard/maixbit/board/leds"
 	"github.com/embeddedgo/kendryte/hal/fpioa"
 	"github.com/embeddedgo/kendryte/hal/irq"
 	"github.com/embeddedgo/kendryte/hal/timer"
@@ -21,7 +21,7 @@ var tickCount uint64
 //go:interrupthandler
 func TIMER0A_Handler() {
 	// Clear the interrupt once we're done with it
-	p.Channel(1).ClearIRQ()
+	p.Channel(0).ClearIRQ()
 
 	tickCount++
 }
@@ -30,11 +30,11 @@ func main() {
 	freq := 100.0 // Hz
 
 	// Pin assignment
-	ch1 := fpioa.Pin(12)
-	ch2 := fpioa.Pin(13)
-	ch3 := fpioa.Pin(14)
-	ch1.Setup(fpioa.TIMER0_TOGGLE2 | fpioa.EnOE | fpioa.DriveH34L23)
-	ch2.Setup(fpioa.TIMER0_TOGGLE1 | fpioa.EnOE | fpioa.DriveH34L23)
+	ch1 := fpioa.Pin(leds.Red)
+	ch2 := fpioa.Pin(leds.Green)
+	ch3 := fpioa.Pin(leds.Blue)
+	ch1.Setup(fpioa.TIMER0_TOGGLE1 | fpioa.EnOE | fpioa.DriveH34L23)
+	ch2.Setup(fpioa.TIMER0_TOGGLE2 | fpioa.EnOE | fpioa.DriveH34L23)
 	ch3.Setup(fpioa.TIMER0_TOGGLE3 | fpioa.EnOE | fpioa.DriveH34L23)
 
 	// Peripheral is timer0
@@ -55,10 +55,10 @@ func main() {
 	g.Enable()
 	b.Enable()
 
-	// Enable an interrupt for the green channel
+	// Enable an interrupt for the red channel
 	// This is only for demonstration purposes where you might want to change
 	// the duty cycle on each clock and can be ommited
-	g.EnableIRQ()
+	r.EnableIRQ()
 	irq.TIMER0A.Enable(rtos.IntPrioLow, irq.M0)
 
 	// Animate duty cycle
