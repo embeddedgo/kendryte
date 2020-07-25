@@ -26,7 +26,7 @@ type Periph struct {
 	brdiv  mmio.U32
 }
 
-func UART(n int) *Periph {
+func UARTHS(n int) *Periph {
 	if n != 0 {
 		panic("uarths: bad number")
 	}
