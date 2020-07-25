@@ -15,12 +15,13 @@ import (
 	"github.com/embeddedgo/kendryte/hal/timer"
 )
 
+var p *timer.Periph
 var tickCount uint64
 
 //go:interrupthandler
 func TIMER0A_Handler() {
-	timer.TIMER(0).ClearIRQ(0)
-	timer.TIMER(0).ClearIRQ(1)
+	// Clear the interrupt once we're done with it
+	p.Channel(1).ClearIRQ()
 
 	tickCount++
 }
@@ -36,13 +37,13 @@ func main() {
 	ch2.Setup(fpioa.TIMER0_TOGGLE1 | fpioa.EnOE | fpioa.DriveH34L23)
 	ch3.Setup(fpioa.TIMER0_TOGGLE3 | fpioa.EnOE | fpioa.DriveH34L23)
 
-	// Peripheral
-	p := timer.TIMER(0)
+	// Peripheral is timer0
+	p = timer.TIMER(0)
 
 	// Driver instance
-	r := timer.PWM(p.Channel(0))
-	g := timer.PWM(p.Channel(1))
-	b := timer.PWM(p.Channel(2))
+	r := timer.NewPWM(p.Channel(0))
+	g := timer.NewPWM(p.Channel(1))
+	b := timer.NewPWM(p.Channel(2))
 
 	// Set frequency now so we don't have to wait around for the first period to expire
 	r.SetFrequency(freq, .5)
@@ -54,7 +55,9 @@ func main() {
 	g.Enable()
 	b.Enable()
 
-	// Enable an ISR for the green channel
+	// Enable an interrupt for the green channel
+	// This is only for demonstration purposes where you might want to change
+	// the duty cycle on each clock and can be ommited
 	g.EnableIRQ()
 	irq.TIMER0A.Enable(rtos.IntPrioLow, irq.M0)
 
