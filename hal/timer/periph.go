@@ -103,27 +103,47 @@ func (c *Channel) n() uintptr {
 	return (uintptr(unsafe.Pointer(c)) - (mmap.TIMER0_BASE + c.p()*0x10000)) / 0x14
 }
 
+// Periph returns the parent timer of this channel
 func (c *Channel) Periph() *Periph {
 	return TIMER(int(c.p()))
 }
 
-func (c *Channel) SetInterval(nanoseconds int64) {
-	clk := c.Periph().Bus().Clock()
-
-	step := 1e9 / clk
-	period := uint32(nanoseconds / step)
-
-	if period < 0 || period > 2147483647 {
+// SetLowTicks assigns the load_count register the number of clock cycles to
+// count down. i.e. the interval when operating as a timer, or the high period
+// when operating as a PWM.
+// Conversion from time units to ticks can be calculated by retrieaving the
+// peripherals bus clock with: myChannel.Periph().Bus().Clock()
+func (c *Channel) SetLowTicks(ticks int) {
+	if ticks < 0 || ticks > 2147483647 {
 		panic("timer: period outside of 32bit range")
 	}
-
-	c.load_count.Store(period)
+	c.load_count.Store(uint32(ticks))
 }
 
+// SetHighTicks assigns the load_count2 register the number of clock cycles to
+// count down while driving the PWM output low. Total timer interval is the sum
+// of load_count and load_count2
+func (c *Channel) SetHighTicks(ticks int) {
+	if ticks < 0 || ticks > 2147483647 {
+		panic("timer: period outside of 32bit range")
+	}
+	c.Periph().load_count2[c.n()].Store(uint32(ticks))
+}
+
+// DutyRegs returns pointers to the timers load_count and load_count2 registers
+// for manipulation inside of interrupts or DMA operations.
+func (c *Channel) DutyRegs() (lowTicks, highTicks *mmio.U32) {
+	lowTicks = &c.load_count
+	highTicks = &c.Periph().load_count2[c.n()]
+	return
+}
+
+// EnableIRQ unsets the interrupt mask and enables the channel, if a interval
+// has not been set the timer will be defaulted to 10ms.
 func (c *Channel) EnableIRQ() {
 	// Avoid interrupt storm if frequency has not been set
 	if c.load_count.Load() == 0 {
-		c.SetInterval(1e7)
+		c.SetLowTicks(2000000) // 10ms
 	}
 
 	// Clear any existing ISRs
@@ -138,6 +158,7 @@ func (c *Channel) DisableIRQ() {
 	c.control.SetBits(interruptMask)
 }
 
+// ClearIRQ marks the interrupt as complete
 func (c *Channel) ClearIRQ() {
 	c.eoi.Load()
 }

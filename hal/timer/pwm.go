@@ -18,6 +18,8 @@ func (d *PWM) Enable() {
 	d.control.SetBits(pwmEnable | enable | userMode | interruptMask)
 }
 
+// SetFrequency assigns the PWM channel with a clock rate in Hz and duty cycle
+// between 0.0 and 1.0
 func (d *PWM) SetFrequency(frequency float64, duty float64) {
 	clk := float64(d.Periph().Bus().Clock() * 2)
 
@@ -27,9 +29,9 @@ func (d *PWM) SetFrequency(frequency float64, duty float64) {
 	if duty < 0 || duty > 1 {
 		panic("pwm: duty cycle must be 0.0-1.0")
 	}
-	period := uint32(clk / frequency)
-	percent := uint32(duty * float64(period))
+	period := int(clk / frequency)
+	percent := int(duty * float64(period))
 
-	d.load_count.Store(period - percent)
-	d.Periph().load_count2[d.n()].Store(percent)
+	d.SetLowTicks(period - percent)
+	d.SetHighTicks(percent)
 }
