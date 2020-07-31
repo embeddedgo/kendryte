@@ -29,9 +29,9 @@ const (
 func (e DriverError) Error() string {
 	switch e {
 	case ErrBufOverflow:
-		return "uart: buffer overflow"
+		return "uarths: buffer overflow"
 	case ErrTimeout:
-		return "uart: timeout"
+		return "uarths: timeout"
 	}
 	return ""
 }
