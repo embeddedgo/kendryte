@@ -4,6 +4,11 @@
 
 package uart
 
+import (
+	"embedded/rtos"
+	"time"
+)
+
 type DriverError uint8
 
 const (
@@ -47,4 +52,54 @@ type Driver struct {
 	isr       uint32
 	timeoutRx time.Duration
 	timeoutTx time.Duration
+}
+
+// NewDriver returns a new driver for p.
+func NewDriver(p *Periph) *Driver {
+	return &Driver{p: p, timeoutRx: -1, timeoutTx: -1}
+}
+
+type Config uint16
+
+const (
+	W5b = Config(Word5b) // 5-bit data word
+	W6b = Config(Word6b) // 6-bit data word
+	W7b = Config(Word7b) // 7-bit data word
+	W8b = Config(Word7b) // 8-bit data word
+
+	S2b = Config(Stop2b) // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
+
+	Odd  = Config(ParOdd)  // parity control enabled: odd.
+	Even = Config(ParEven) // parity control enabled: even
+
+	HWFC = Config(RTS|AFCE) << 8 // hardware flow controll using RTS/CTS
+)
+
+func (d *Driver) Periph() *Periph {
+	return d.p
+}
+
+func (d *Driver) Setup(cfg Config, baudrate int) {
+	d.p.EnableClock()
+	d.p.Reset()
+	d.p.SetConf1(Conf1(cfg))
+	d.p.SetConf2(Conf2(cfg >> 8))
+	//d.p.SetConf3(uart.FE | uart.CRF | uart.CTF | uart.TFT8 | uart.RFT1)
+	//d.p.SetConf4(uart.PTIME)
+	d.p.SetBaudrate(baudrate)
+}
+
+// SetBaudrate configures UART speed.
+func (d *Driver) SetBaudrate(baudrate int) {
+	d.p.SetBaudrate(baudrate)
+}
+
+// SetReadTimeout sets the read timeout used by Read* functions.
+func (d *Driver) SetReadTimeout(timeout time.Duration) {
+	d.timeoutRx = timeout
+}
+
+// SetWriteTimeout sets the write timeout used by Write* functions.
+func (d *Driver) SetWriteTimeout(timeout time.Duration) {
+	d.timeoutTx = timeout
 }

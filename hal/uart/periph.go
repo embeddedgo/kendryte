@@ -203,14 +203,14 @@ func (p *Periph) SetConf4(c Conf4) {
 }
 
 func (p *Periph) SetBaudrate(br int) {
-	div := bus.APB0.Clock() / int64(br) // apb0clock=208000000, div=1805
+	div := (p.Bus().Clock() + int64(br)/2) / int64(br)
 	if uint64(div) >= 1<<20 {
 		panic("uart: bad baudrate")
 	}
-	p.lcr.SetBits(dla)                           // 0x5023000c
-	p.dlh_ier.Store(uint32(div >> 12))           // 0x50230004, 0
-	p.rbr_dll_thr.Store(uint32(div >> 4 & 0xFF)) // 0x50230000, 112
-	p.dlf.Store(uint32(div & 0xF))               // 0x502300c0, 13
+	p.lcr.SetBits(dla)
+	p.dlh_ier.Store(uint32(div >> 12))
+	p.rbr_dll_thr.Store(uint32(div >> 4 & 0xFF))
+	p.dlf.Store(uint32(div & 0xF))
 	p.lcr.ClearBits(dla)
 }
 
