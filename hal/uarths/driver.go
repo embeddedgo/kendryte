@@ -121,8 +121,9 @@ func (d *Driver) SetStopBits(n int) {
 	d.p.SetTxConf(cfg, 0)
 }
 
-func (d *Driver) SetBaudrate(br int) {
-	d.p.SetBaudrate(br)
+// SetBaudrate configures UARTHS speed.
+func (d *Driver) SetBaudrate(baudrate int) {
+	d.p.SetBaudrate(baudrate)
 }
 
 // SetReadTimeout sets the read timeout used by Read* functions.
