@@ -126,15 +126,15 @@ func (p *Periph) Reset() {
 type Conf1 uint8
 
 const (
-	Word5b Conf1 = 0 << 0 // 5-bit data word
-	Word6b Conf1 = 1 << 0 // 6-bit data word
-	Word7b Conf1 = 2 << 0 // 7-bit data word
-	Word8b Conf1 = 3 << 0 // 8-bit data word
+	W5b Conf1 = 0 << 0 // 5-bit data word
+	W6b Conf1 = 1 << 0 // 6-bit data word
+	W7b Conf1 = 2 << 0 // 7-bit data word
+	W8b Conf1 = 3 << 0 // 8-bit data word
 
-	Stop2b Conf1 = 1 << 2 // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
+	S2b Conf1 = 1 << 2 // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
 
-	ParOdd  Conf1 = 1 << 3 // parity control enabled: odd.
-	ParEven Conf1 = 3 << 3 // parity control enabled: even
+	Odd  Conf1 = 1 << 3 // parity control enabled: odd.
+	Even Conf1 = 3 << 3 // parity control enabled: even
 
 	Break Conf1 = 1 << 6 // break control bit
 
@@ -142,7 +142,7 @@ const (
 )
 
 func (p *Periph) Conf1() Conf1 {
-	return Conf1(p.lcr.LoadBits(uint32(Word8b + Stop2b + ParEven + Break)))
+	return Conf1(p.lcr.LoadBits(uint32(W8b + S2b + Even + Break)))
 }
 
 func (p *Periph) SetConf1(c Conf1) {

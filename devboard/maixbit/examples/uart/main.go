@@ -20,7 +20,7 @@ func main() {
 	u := uart.UART(1)
 	u.EnableClock()
 	u.Reset()
-	u.SetConf1(uart.Word8b)
+	u.SetConf1(uart.W8b)
 	u.SetConf2(0)
 	u.SetConf3(uart.FE | uart.CRF | uart.CTF | uart.TFT8 | uart.RFT1)
 	u.SetConf4(uart.PTIME)

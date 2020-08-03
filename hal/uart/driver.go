@@ -59,18 +59,21 @@ func NewDriver(p *Periph) *Driver {
 	return &Driver{p: p, timeoutRx: -1, timeoutTx: -1}
 }
 
+// Config is an unified configuration bitfield intended to be used by
+// Driver.Setup method. It combines user controlable configuration bits from
+// Conf1 and Conf2 bitfields.
 type Config uint16
 
 const (
-	W5b = Config(Word5b) // 5-bit data word
-	W6b = Config(Word6b) // 6-bit data word
-	W7b = Config(Word7b) // 7-bit data word
-	W8b = Config(Word7b) // 8-bit data word
+	Word5b = Config(W5b) // 5-bit data word
+	Word6b = Config(W6b) // 6-bit data word
+	Word7b = Config(W7b) // 7-bit data word
+	Word8b = Config(W7b) // 8-bit data word
 
-	S2b = Config(Stop2b) // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
+	Stop2b = Config(S2b) // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
 
-	Odd  = Config(ParOdd)  // parity control enabled: odd.
-	Even = Config(ParEven) // parity control enabled: even
+	ParOdd  = Config(Odd)  // parity control enabled: odd.
+	ParEven = Config(Even) // parity control enabled: even
 
 	HWFC = Config(RTS|AFCE) << 8 // hardware flow controll using RTS/CTS
 )
