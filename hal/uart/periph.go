@@ -123,82 +123,127 @@ func (p *Periph) Reset() {
 	mx.PERI_RESET.Unlock()
 }
 
-type Conf1 uint8
+// LineConf (line configuration) represents a serial data word chracteristics
+type LineConf uint8
 
 const (
-	W5b Conf1 = 0 << 0 // 5-bit data word
-	W6b Conf1 = 1 << 0 // 6-bit data word
-	W7b Conf1 = 2 << 0 // 7-bit data word
-	W8b Conf1 = 3 << 0 // 8-bit data word
+	W5 LineConf = 0 << 0 // 5-bit data word
+	W6 LineConf = 1 << 0 // 6-bit data word
+	W7 LineConf = 2 << 0 // 7-bit data word
+	W8 LineConf = 3 << 0 // 8-bit data word
 
-	S2b Conf1 = 1 << 2 // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
-
-	Odd  Conf1 = 1 << 3 // parity control enabled: odd.
-	Even Conf1 = 3 << 3 // parity control enabled: even
-
-	Break Conf1 = 1 << 6 // break control bit
-
-	dla = 1 << 7 // divisor latch access bit
+	S2  LineConf = 1 << 2 // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
+	PEN LineConf = 1 << 3 // parity enable
+	EPS LineConf = 3 << 3 // even parity select
+	BC  LineConf = 1 << 6 // break control bit
+	dla          = 1 << 7 // divisor latch access bit
 )
 
-func (p *Periph) Conf1() Conf1 {
+func (p *Periph) LineConf() LineConf {
 	return Conf1(p.lcr.LoadBits(uint32(W8b + S2b + Even + Break)))
 }
 
-func (p *Periph) SetConf1(c Conf1) {
+func (p *Periph) SetLineConf(c LineConf) {
 	p.lcr.Store(uint32(c))
 }
 
-type Conf2 uint8
+// ModeConf (mode configuration) represents UART mode of operation
+type ModeConf uint8
 
 const (
-	DTR  Conf2 = 1 << 0 // directly control of DTR output
-	RTS  Conf2 = 1 << 1 // directly control of RTS output
-	LB   Conf2 = 1 << 4 // put the UART into loop-back diagnostic mode
-	AFCE Conf2 = 1 << 5 // auto flow controll enable bit
-	SIRE Conf2 = 1 << 6 // SIR mode enable bit
+	DTR  ModeConf = 1 << 0 // directly control of DTR output
+	RTS  ModeConf = 1 << 1 // directly control of RTS output
+	LB   ModeConf = 1 << 4 // put the UART into loop-back diagnostic mode
+	AFCE ModeConf = 1 << 5 // auto flow controll enable bit
+	SIRE ModeConf = 1 << 6 // IrDA SIR (serial infrared) mode enable bit
 )
 
-func (p *Periph) Conf2() Conf2 {
-	return Conf2(p.mcr.Load())
+func (p *Periph) ModeConf() ModeConf {
+	return ModeConf(p.mcr.Load())
 }
 
-func (p *Periph) SetConf2(c Conf2) {
+func (p *Periph) SetModeConf(c ModeConf) {
 	p.mcr.Store(uint32(c))
 }
 
-type Conf3 uint8
+// FIFOConf (FIFO configuration).
+type FIFOConf uint8
 
 const (
-	FE    Conf3 = 1 << 0 // enable FIFO mode
-	CRF   Conf3 = 1 << 1 // reset and clear Rx FIFO, self clearing bit
-	CTF   Conf3 = 1 << 2 // reset and clear Tx FIFO, self clearing bit
-	DMAM1 Conf3 = 1 << 3 // dma mode 1
-	TFT0  Conf3 = 0 << 4 // empty Tx FIFO interrupt threshold
-	TFT2  Conf3 = 1 << 4 // 2 words in Tx FIFO interrupt threshold
-	TFT4  Conf3 = 2 << 4 // 1/4 Tx FIFO interrupt threshold (4 words)
-	TFT8  Conf3 = 3 << 4 // 1/2 Tx FIFO interrupt threshold (8 words)
-	RFT1  Conf3 = 0 << 6 // 1 word Rx FIFO interrupt threshold
-	RFT4  Conf3 = 1 << 6 // 1/4 Rx FIFO interrupt threshold (4 words)
-	RFT8  Conf3 = 2 << 6 // 1/2 Rx FIFO interrupt threshold (8 words)
-	RFT14 Conf3 = 3 << 6 // 2 less than full Rx FIFO interrupt threshold
+	FE    FIFOConf = 1 << 0 // enable FIFO mode
+	CRF   FIFOConf = 1 << 1 // reset and clear Rx FIFO, self clearing bit
+	CTF   FIFOConf = 1 << 2 // reset and clear Tx FIFO, self clearing bit
+	DMAM1 FIFOConf = 1 << 3 // dma mode 1
+	TFT0  FIFOConf = 0 << 4 // empty Tx FIFO interrupt threshold
+	TFT2  FIFOConf = 1 << 4 // 2 words in Tx FIFO interrupt threshold
+	TFT4  FIFOConf = 2 << 4 // 1/4 Tx FIFO interrupt threshold (4 words)
+	TFT8  FIFOConf = 3 << 4 // 1/2 Tx FIFO interrupt threshold (8 words)
+	RFT1  FIFOConf = 0 << 6 // 1 word Rx FIFO interrupt threshold
+	RFT4  FIFOConf = 1 << 6 // 1/4 Rx FIFO interrupt threshold (4 words)
+	RFT8  FIFOConf = 2 << 6 // 1/2 Rx FIFO interrupt threshold (8 words)
+	RFT14 FIFOConf = 3 << 6 // 2 less than full Rx FIFO interrupt threshold
 )
 
-func (p *Periph) Conf3() Conf3 {
-	return Conf3(p.fcr_iir.Load())
-}
-
-func (p *Periph) SetConf3(c Conf3) {
+func (p *Periph) SetFIFOConf(c FIFOConf) {
 	p.fcr_iir.Store(uint32(c))
 }
 
-type Conf4 uint8
+func (p *Periph) FE() FIFOConf {
+	return FIFOConf(p.sfe.Load()) & FE
+}
+
+func (p *Periph) SetFE(fe FIFOConf) {
+	p.sfe.Store(uint32(fe & FE))
+}
+
+func (p *Periph) TFT() FIFOConf {
+	return FIFOConf(p.srt.Load()<<4) & TFT8
+}
+
+func (p *Periph) SetTFT(tft FIFOConf) {
+	p.srt.Store(uint32(tft&TFT8) >> 4)
+}
+
+func (p *Periph) RxFIFOTrigger() FIFOConf {
+	return FIFOConf(p.srt.Load() << 6)
+}
+
+func (p *Periph) SetRxFIFOTrigger(rft FIFOConf) {
+	p.srt.Store(uint32(srt&RFT14) >> 6)
+}
+
+type IRQ uint8
 
 const (
-	PTIME Conf4 = 1 << 7 // programmable Tx intrerrupt mode enable
+	DSSI IRQ = 0
+	NOI  IRQ = 1
+	TBEI IRQ = 2
+	RBFI IRQ = 4
+	LSI  IRQ = 6
+	BI   IRQ = 7  // busy interrupt
+	CTOI IRQ = 12 // character timout interrupt
 )
 
-func (p *Periph) SetConf4(c Conf4) {
+func (p *Periph) IRQ() IRQ {
+
+}
+
+// IntConf (interrupt mode configuration)
+type IntConf uint8
+
+const (
+	ERBFI IntConf = 1 << 0 // enbale Rx data available interrupt
+	ETBEI IntConf = 1 << 1 // enable Tx holding register empty interrupt
+	ELSI  IntConf = 1 << 2 // enable receiver line status interrupt
+	EDSSI IntConf = 1 << 3 // enable modem status interrupt
+	PTIME IntConf = 1 << 7 // programmable Tx intrerrupt mode enable
+)
+
+func (p *Periph) IntConf() IntConf {
+	return IntConf(p.dlh_ier.Load())
+}
+
+func (p *Periph) SetIntConf(c IntConf) {
 	p.dlh_ier.Store(uint32(c))
 }
 
@@ -219,21 +264,22 @@ type Event uint8
 const (
 	RxNotEmpty Event = 1 << 0 // at least one received word can be read
 	LINBreak   Event = 1 << 4 // break sequence detected
-	TxEmpty    Event = 1 << 5 // Tx hold register empty !(FIFO mode && PTIME)
-	TxFull     Event = 1 << 5 // Tx FIFO full (FIFO mode && PTIME)
-	TxDone     Event = 1 << 6 // transmssion complete (shift register is empty)
+	TxEmpty    Event = 1 << 5 // Tx hold register empty (!FIFOmode || !PTIME)
+	TxFull     Event = 1 << 5 // Tx FIFO full (FIFOmode && PTIME)
+	TxDone     Event = 1 << 6 // Tx done (shift register is empty)
 )
 
 type Error uint8
 
 const (
-	ErrOverrun Error = 1 << 1
-	ErrParity  Error = 1 << 2
-	ErrFraming Error = 1 << 3
-	ErrRxFIFO  Error = 1 << 7
+	ErrOverrun Error = 1 << 1 // data lost because of no free space in hardware
+	ErrParity  Error = 1 << 2 // parity error detected
+	ErrFraming Error = 1 << 3 // no valid stop bit detected in the receive data
+	ErrRxFIFO  Error = 1 << 7 // FIFOmode && (ErrParity||ErrFraming||LINBreak)
 	ErrAll           = ErrOverrun | ErrParity | ErrFraming | ErrRxFIFO
 )
 
+// Status returns active status bits. It clears LINBreak event and all errors.
 func (p *Periph) Status() (Event, Error) {
 	lsr := p.lsr.Load()
 	return Event(lsr) &^ Event(ErrAll), Error(lsr) & ErrAll

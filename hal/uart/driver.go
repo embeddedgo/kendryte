@@ -6,6 +6,7 @@ package uart
 
 import (
 	"embedded/rtos"
+	"sync"
 	"time"
 )
 
@@ -52,6 +53,7 @@ type Driver struct {
 	isr       uint32
 	timeoutRx time.Duration
 	timeoutTx time.Duration
+	mx        sync.Mutex
 }
 
 // NewDriver returns a new driver for p.
@@ -60,22 +62,22 @@ func NewDriver(p *Periph) *Driver {
 }
 
 // Config is an unified configuration bitfield intended to be used by
-// Driver.Setup method. It combines user controlable configuration bits from
-// Conf1 and Conf2 bitfields.
+//  Driver's Setup method. It combines bits from Conf1 and Conf2 bitfields.
 type Config uint16
 
 const (
-	Word5b = Config(W5b) // 5-bit data word
-	Word6b = Config(W6b) // 6-bit data word
-	Word7b = Config(W7b) // 7-bit data word
-	Word8b = Config(W7b) // 8-bit data word
+	Word5b = Config(W5) // 5-bit data word
+	Word6b = Config(W6) // 6-bit data word
+	Word7b = Config(W7) // 7-bit data word
+	Word8b = Config(W7) // 8-bit data word
+	Stop2b = Config(S2) // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
 
-	Stop2b = Config(S2b) // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
-
-	ParOdd  = Config(Odd)  // parity control enabled: odd.
-	ParEven = Config(Even) // parity control enabled: even
+	ParOdd  = Config(PE)       // parity control enabled: odd
+	ParEven = Config(PE | EPS) // parity control enabled: even
 
 	HWFC = Config(RTS|AFCE) << 8 // hardware flow controll using RTS/CTS
+	Loop = Config(LB) << 8       // loop-back diagnostic mode
+	SIR  = Config(SIRE) << 8     // IrDA SIR (serial infrared) mode
 )
 
 func (d *Driver) Periph() *Periph {
@@ -87,7 +89,7 @@ func (d *Driver) Setup(cfg Config, baudrate int) {
 	d.p.Reset()
 	d.p.SetConf1(Conf1(cfg))
 	d.p.SetConf2(Conf2(cfg >> 8))
-	//d.p.SetConf3(uart.FE | uart.CRF | uart.CTF | uart.TFT8 | uart.RFT1)
+	//d.p.SetConf3(uart.FE | uart.CRF | uart.CTF | uart.TFT2 | uart.RFT1)
 	//d.p.SetConf4(uart.PTIME)
 	d.p.SetBaudrate(baudrate)
 }
