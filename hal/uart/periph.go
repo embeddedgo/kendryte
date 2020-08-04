@@ -133,14 +133,14 @@ const (
 	W8 LineConf = 3 << 0 // 8-bit data word
 
 	S2  LineConf = 1 << 2 // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
-	PEN LineConf = 1 << 3 // parity enable
+	PE  LineConf = 1 << 3 // parity enable
 	EPS LineConf = 3 << 3 // even parity select
 	BC  LineConf = 1 << 6 // break control bit
 	dla          = 1 << 7 // divisor latch access bit
 )
 
 func (p *Periph) LineConf() LineConf {
-	return Conf1(p.lcr.LoadBits(uint32(W8b + S2b + Even + Break)))
+	return LineConf(p.lcr.LoadBits(uint32(W8 + S2 + PE + EPS + BC)))
 }
 
 func (p *Periph) SetLineConf(c LineConf) {
@@ -188,6 +188,20 @@ func (p *Periph) SetFIFOConf(c FIFOConf) {
 	p.fcr_iir.Store(uint32(c))
 }
 
+func (p *Periph) SoftReset(txfifo, rxfifo, uart bool) {
+	var reset uint32
+	if txfifo {
+		reset = 1 << 2
+	}
+	if rxfifo {
+		reset |= 1 << 1
+	}
+	if uart {
+		reset |= 1 << 0
+	}
+	p.srr.Store(reset)
+}
+
 func (p *Periph) FE() FIFOConf {
 	return FIFOConf(p.sfe.Load()) & FE
 }
@@ -201,42 +215,57 @@ func (p *Periph) TFT() FIFOConf {
 }
 
 func (p *Periph) SetTFT(tft FIFOConf) {
-	p.srt.Store(uint32(tft&TFT8) >> 4)
+	p.stet.Store(uint32(tft&TFT8) >> 4)
 }
 
-func (p *Periph) RxFIFOTrigger() FIFOConf {
-	return FIFOConf(p.srt.Load() << 6)
+func (p *Periph) RFT() FIFOConf {
+	return FIFOConf(p.stet.Load() << 6)
 }
 
-func (p *Periph) SetRxFIFOTrigger(rft FIFOConf) {
-	p.srt.Store(uint32(srt&RFT14) >> 6)
+func (p *Periph) SetRFT(rft FIFOConf) {
+	p.srt.Store(uint32(rft&RFT14) >> 6)
 }
 
-type IRQ uint8
+// TxFIFOLevel return the number of data entries in the Tx FIFO.
+func (p *Periph) TxFIFOLevel() int {
+	return int(p.tfl.Load())
+}
 
+// RxFIFOLevel return the number of data entries in the Rx FIFO.
+func (p *Periph) RxFIFOLevel() int {
+	return int(p.rfl.Load())
+}
+
+type Int uint8
+
+// Interrupts listed in decreasing priority. The clearing method is given at the
+// end of each event description (in parentheses).
 const (
-	DSSI IRQ = 0
-	NOI  IRQ = 1
-	TBEI IRQ = 2
-	RBFI IRQ = 4
-	LSI  IRQ = 6
-	BI   IRQ = 7  // busy interrupt
-	CTOI IRQ = 12 // character timout interrupt
+	RxStatus    Int = 6 // overrun/parity/framing err, break (call LineStatus)
+	RxReady     Int = 4 // Rx data available (read below the trigger level)
+	TxReady     Int = 2 // Tx ready for next data (cleared by Event method)
+	ModemStatus Int = 0 // modem/flow control signal (call ModemStatus)
+	BusyFault   Int = 7 // SetLineConf while the UART is busy (call Status1)
+	None        Int = 1 // no interrupt
 )
 
-func (p *Periph) IRQ() IRQ {
-
+// Event returns the highest priority enabled event. If rxto is true the RxReady
+// event was generated because there was no in or out activity on non-empty FIFO
+// (below Rx trigger level) for 4 word period.
+func (p *Periph) Int() (i Int, rxto bool) {
+	iir := p.fcr_iir.Load()
+	return Int(iir & 7), iir&15 == 12
 }
 
-// IntConf (interrupt mode configuration)
+// IntConf
 type IntConf uint8
 
 const (
-	ERBFI IntConf = 1 << 0 // enbale Rx data available interrupt
-	ETBEI IntConf = 1 << 1 // enable Tx holding register empty interrupt
-	ELSI  IntConf = 1 << 2 // enable receiver line status interrupt
-	EDSSI IntConf = 1 << 3 // enable modem status interrupt
-	PTIME IntConf = 1 << 7 // programmable Tx intrerrupt mode enable
+	RxStatusEn    IntConf = 1 << 2 // enable RxStatus event
+	RxReadyEn     IntConf = 1 << 0 // enbale RxReady event
+	TxReadyEn     IntConf = 1 << 1 // enable TxReady event
+	ModemStatusEn IntConf = 1 << 3 // enable ModemStatus event
+	PTIME         IntConf = 1 << 7 // programmable Tx intrerrupt mode enable
 )
 
 func (p *Periph) IntConf() IntConf {
@@ -259,14 +288,14 @@ func (p *Periph) SetBaudrate(br int) {
 	p.lcr.ClearBits(dla)
 }
 
-type Event uint8
+type Status uint8
 
 const (
-	RxNotEmpty Event = 1 << 0 // at least one received word can be read
-	LINBreak   Event = 1 << 4 // break sequence detected
-	TxEmpty    Event = 1 << 5 // Tx hold register empty (!FIFOmode || !PTIME)
-	TxFull     Event = 1 << 5 // Tx FIFO full (FIFOmode && PTIME)
-	TxDone     Event = 1 << 6 // Tx done (shift register is empty)
+	RxNotEmpty Status = 1 << 0 // at least one received word can be read
+	LINBreak   Status = 1 << 4 // break sequence detected
+	TxEmpty    Status = 1 << 5 // Tx hold register empty (use if !FE || !PTIME)
+	TxFull     Status = 1 << 5 // Tx FIFO full (use if FE && PTIME)
+	TxDone     Status = 1 << 6 // Tx done (shift register is empty)
 )
 
 type Error uint8
@@ -276,13 +305,29 @@ const (
 	ErrParity  Error = 1 << 2 // parity error detected
 	ErrFraming Error = 1 << 3 // no valid stop bit detected in the receive data
 	ErrRxFIFO  Error = 1 << 7 // FIFOmode && (ErrParity||ErrFraming||LINBreak)
-	ErrAll           = ErrOverrun | ErrParity | ErrFraming | ErrRxFIFO
+
+	ErrAll = ErrOverrun | ErrParity | ErrFraming | ErrRxFIFO
 )
 
-// Status returns active status bits. It clears LINBreak event and all errors.
-func (p *Periph) Status() (Event, Error) {
+// Status returns the line status bits. It clears LINBreak event and all errors.
+func (p *Periph) Status() (Status, Error) {
 	lsr := p.lsr.Load()
-	return Event(lsr) &^ Event(ErrAll), Error(lsr) & ErrAll
+	return Status(lsr) &^ Status(ErrAll), Error(lsr) & ErrAll
+}
+
+type Status1 uint8
+
+const (
+	Busy           Status1 = 1 << 0
+	TxFIFONotFull  Status1 = 1 << 1
+	TxFIFOEmpty    Status1 = 1 << 2
+	RxFIFONotEmpty Status1 = 1 << 3
+	RxFIFOFull     Status1 = 1 << 4
+)
+
+// Status1 returns the UART status bits.
+func (p *Periph) Status1() Status1 {
+	return Status1(p.usr.Load())
 }
 
 func (p *Periph) Load() int {

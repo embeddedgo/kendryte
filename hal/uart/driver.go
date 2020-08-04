@@ -7,6 +7,7 @@ package uart
 import (
 	"embedded/rtos"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -38,12 +39,12 @@ type Driver struct {
 	p *Periph
 
 	// rx state
-	rxbuf    []byte
-	nextr    uint32
-	nextw    uint32
-	rxcmd    uint32
-	overflow uint32
-	rxready  rtos.Note
+	rxbuf   []byte
+	nextr   uint32
+	nextw   uint32
+	rxcmd   uint32
+	rxerr   uint32
+	rxready rtos.Note
 
 	// tx state
 	txdata string
@@ -87,10 +88,10 @@ func (d *Driver) Periph() *Periph {
 func (d *Driver) Setup(cfg Config, baudrate int) {
 	d.p.EnableClock()
 	d.p.Reset()
-	d.p.SetConf1(Conf1(cfg))
-	d.p.SetConf2(Conf2(cfg >> 8))
-	//d.p.SetConf3(uart.FE | uart.CRF | uart.CTF | uart.TFT2 | uart.RFT1)
-	//d.p.SetConf4(uart.PTIME)
+	d.p.SetLineConf(LineConf(cfg))
+	d.p.SetModeConf(ModeConf(cfg >> 8))
+	d.p.SetFIFOConf(FE | CRF | CTF | TFT2 | RFT1)
+	d.p.SetIntConf(PTIME)
 	d.p.SetBaudrate(baudrate)
 }
 
@@ -107,4 +108,45 @@ func (d *Driver) SetReadTimeout(timeout time.Duration) {
 // SetWriteTimeout sets the write timeout used by Write* functions.
 func (d *Driver) SetWriteTimeout(timeout time.Duration) {
 	d.timeoutTx = timeout
+}
+
+const (
+	isrNone = iota
+	isrRx
+	isrTx
+)
+
+// ISR handles UART interrupts.
+func (d *Driver) ISR() {
+	for {
+		ir, _ := d.p.Int()
+		switch ir {
+		case RxReady:
+			// todo
+		case TxReady:
+			atomic.StoreUint32(&d.isr, isrTx)
+			for {
+				if d.txn >= len(d.txdata) {
+					d.txdone.Wakeup()
+					break
+				}
+				if d.p.Status1()&TxFIFONotFull == 0 {
+					m := len(d.txdata) - d.txn
+					if m <= 12 {
+						tft := TFT4
+						if m <= 8 {
+							tft = TFT8
+						}
+						d.p.SetTFT(tft)
+					}
+					break
+				}
+				d.p.Store(int(d.txdata[d.txn]))
+				d.txn++
+			}
+			atomic.StoreUint32(&d.isr, isrNone)
+		default:
+			return
+		}
+	}
 }

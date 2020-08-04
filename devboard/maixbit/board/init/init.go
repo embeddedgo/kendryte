@@ -57,10 +57,9 @@ func setupSystemWriter() {
 	u := uart.UART(dbgUART)
 	u.EnableClock()
 	u.Reset()
-	u.SetConf1(uart.W8b)
-	u.SetConf2(0)
-	u.SetConf3(uart.FE | uart.CRF | uart.CTF | uart.TFT8 | uart.RFT1)
-	u.SetConf4(uart.PTIME)
+	u.SetLineConf(uart.W8)
+	u.SetFIFOConf(uart.FE | uart.CRF | uart.CTF | uart.TFT8 | uart.RFT1)
+	u.SetIntConf(uart.PTIME)
 	u.SetBaudrate(115200)
 
 	rtos.SetSystemWriter(write)
