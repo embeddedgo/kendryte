@@ -16,6 +16,21 @@ import (
 )
 
 // Synopsys DW_apb_uart
+//
+//  K210 UART features (CPR reg)
+//  ----------------------------
+//	FIFO_MODE                16
+//	DMA_EXTRA                yes
+//	UART_ADD_ENCODED_PARAMS  yes
+//	SHADOW                   yes
+//	FIFO_STAT                no
+//	FIFO_ACCESS              no
+//	NEW_FEAT                 yes
+//	SIR_LP_MODE              no
+//	SIR_MODE                 yes
+//	THRE_MODE                yes
+//	AFCE_MODE                no
+//	APB_DATA_WIDTH           32
 
 // Periph represents UART peripheral.
 type Periph struct {
@@ -23,20 +38,20 @@ type Periph struct {
 	dlh_ier     mmio.U32
 	fcr_iir     mmio.U32
 	lcr         mmio.U32
-	mcr         mmio.U32
+	mcr         mmio.U32 // AFCE bit not implemented (AFCE_MODE=no)
 	lsr         mmio.U32
 	msr         mmio.U32
 	scr         mmio.U32
-	lpdll       mmio.U32
-	lpdlh       mmio.U32
+	lpdll       mmio.U32 // not implemented (SIR_LP_MODE=no)
+	lpdlh       mmio.U32 // not implemented (SIR_LP_MODE=no)
 	_           [2]uint32
 	srbr_sthr   [16]mmio.U32
-	far         mmio.U32
-	tfr         mmio.U32
-	rfw         mmio.U32
-	usr         mmio.U32
-	tfl         mmio.U32
-	rfl         mmio.U32
+	far         mmio.U32 // not implemented (FIFO_ACCESS=no)
+	tfr         mmio.U32 // not implemented (FIFO_ACCESS=no)
+	rfw         mmio.U32 // not implemented (FIFO_ACCESS=no)
+	usr         mmio.U32 // only BUSY bit implemented (FIFO_STAT=no)
+	tfl         mmio.U32 // not implemented (FIFO_STAT=no)
+	rfl         mmio.U32 // not implemented (FIFO_STAT=no)
 	srr         mmio.U32
 	srts        mmio.U32
 	sbcr        mmio.U32
@@ -154,7 +169,7 @@ const (
 	DTR  ModeConf = 1 << 0 // directly control of DTR output
 	RTS  ModeConf = 1 << 1 // directly control of RTS output
 	LB   ModeConf = 1 << 4 // put the UART into loop-back diagnostic mode
-	AFCE ModeConf = 1 << 5 // auto flow controll enable bit
+	//AFCE ModeConf = 1 << 5 // auto flow controll enable bit
 	SIRE ModeConf = 1 << 6 // IrDA SIR (serial infrared) mode enable bit
 )
 
@@ -224,16 +239,6 @@ func (p *Periph) RFT() FIFOConf {
 
 func (p *Periph) SetRFT(rft FIFOConf) {
 	p.srt.Store(uint32(rft&RFT14) >> 6)
-}
-
-// TxFIFOLevel return the number of data entries in the Tx FIFO.
-func (p *Periph) TxFIFOLevel() int {
-	return int(p.tfl.Load())
-}
-
-// RxFIFOLevel return the number of data entries in the Rx FIFO.
-func (p *Periph) RxFIFOLevel() int {
-	return int(p.rfl.Load())
 }
 
 type Int uint8
@@ -319,10 +324,10 @@ type Status1 uint8
 
 const (
 	Busy           Status1 = 1 << 0
-	TxFIFONotFull  Status1 = 1 << 1
-	TxFIFOEmpty    Status1 = 1 << 2
-	RxFIFONotEmpty Status1 = 1 << 3
-	RxFIFOFull     Status1 = 1 << 4
+	//TxFIFONotFull  Status1 = 1 << 1
+	//TxFIFOEmpty    Status1 = 1 << 2
+	//RxFIFONotEmpty Status1 = 1 << 3
+	//RxFIFOFull     Status1 = 1 << 4
 )
 
 // Status1 returns the UART status bits.
@@ -336,4 +341,8 @@ func (p *Periph) Load() int {
 
 func (p *Periph) Store(d int) {
 	p.rbr_dll_thr.Store(uint32(d))
+}
+
+func (p *Periph) CPR() uint32 {
+	return p.cpr.Load()
 }

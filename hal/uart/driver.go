@@ -70,13 +70,13 @@ const (
 	Word5b = Config(W5) // 5-bit data word
 	Word6b = Config(W6) // 6-bit data word
 	Word7b = Config(W7) // 7-bit data word
-	Word8b = Config(W7) // 8-bit data word
+	Word8b = Config(W8) // 8-bit data word
 	Stop2b = Config(S2) // 2 stop bits for 6 to 8-bit word, 1.5 for 5-bit word
 
 	ParOdd  = Config(PE)       // parity control enabled: odd
 	ParEven = Config(PE | EPS) // parity control enabled: even
 
-	HWFC = Config(RTS|AFCE) << 8 // hardware flow controll using RTS/CTS
+	//HWFC = Config(RTS|AFCE) << 8 // hardware flow controll using RTS/CTS
 	Loop = Config(LB) << 8       // loop-back diagnostic mode
 	SIR  = Config(SIRE) << 8     // IrDA SIR (serial infrared) mode
 )
@@ -90,7 +90,7 @@ func (d *Driver) Setup(cfg Config, baudrate int) {
 	d.p.Reset()
 	d.p.SetLineConf(LineConf(cfg))
 	d.p.SetModeConf(ModeConf(cfg >> 8))
-	d.p.SetFIFOConf(FE | CRF | CTF | TFT2 | RFT1)
+	d.p.SetFIFOConf(FE | TFT2 | RFT1)
 	d.p.SetIntConf(PTIME)
 	d.p.SetBaudrate(baudrate)
 }

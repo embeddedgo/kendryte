@@ -5,42 +5,34 @@
 package main
 
 import (
+	"embedded/rtos"
+
 	"github.com/embeddedgo/kendryte/hal/fpioa"
+	"github.com/embeddedgo/kendryte/hal/irq"
 	"github.com/embeddedgo/kendryte/hal/uart"
 
 	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
 )
 
+var u *uart.Driver
+
 func main() {
+	println(uart.UART(1).CPR())
+
 	rx := fpioa.Pin(4)
 	tx := fpioa.Pin(5)
 	rx.Setup(fpioa.UART1_RX | fpioa.EnIE | fpioa.Schmitt)
 	tx.Setup(fpioa.UART1_TX | fpioa.DriveH34L23 | fpioa.EnOE)
 
-	u := uart.UART(1)
-	u.EnableClock()
-	u.Reset()
-	u.SetLineConf(uart.W8)
-	u.SetFIFOConf(uart.FE | uart.CRF | uart.CTF | uart.TFT8 | uart.RFT1)
-	u.SetIntConf(uart.PTIME)
-	u.SetBaudrate(115200)
+	u = uart.NewDriver(uart.UART(1))
+	u.Setup(uart.Word8b, 115200)
+
+	irq.UART1.Enable(rtos.IntPrioLow, irq.M0)
 
 	for {
-		puts(u, "Hello, World!\r\n")
+		u.WriteString("0123456789abcdefghijklmnoprstuvwxyx\r\n")
 	}
 }
 
-func putc(u *uart.Periph, c byte) {
-	for {
-		if ev, _ := u.Status(); ev&uart.TxFull == 0 {
-			break
-		}
-	}
-	u.Store(int(c))
-}
-
-func puts(u *uart.Periph, s string) {
-	for i := 0; i < len(s); i++ {
-		putc(u, s[i])
-	}
-}
+//go:interrupthandler
+func UART1_Handler() { u.ISR() }
