@@ -77,8 +77,8 @@ const (
 	ParEven = Config(PE | EPS) // parity control enabled: even
 
 	//HWFC = Config(RTS|AFCE) << 8 // hardware flow controll using RTS/CTS
-	Loop = Config(LB) << 8       // loop-back diagnostic mode
-	SIR  = Config(SIRE) << 8     // IrDA SIR (serial infrared) mode
+	Loop = Config(LB) << 8   // loop-back diagnostic mode
+	SIR  = Config(SIRE) << 8 // IrDA SIR (serial infrared) mode
 )
 
 func (d *Driver) Periph() *Periph {
@@ -90,9 +90,9 @@ func (d *Driver) Setup(cfg Config, baudrate int) {
 	d.p.Reset()
 	d.p.SetLineConf(LineConf(cfg))
 	d.p.SetModeConf(ModeConf(cfg >> 8))
-	d.p.SetFIFOConf(FE | TFT2 | RFT1)
-	d.p.SetIntConf(PTIME)
 	d.p.SetBaudrate(baudrate)
+	d.p.SetFIFOConf(FE | TFT2 | RFT1)
+	d.p.SetIntConf(PTIME | TxReadyEn)
 }
 
 // SetBaudrate configures UART speed.
@@ -118,6 +118,7 @@ const (
 
 // ISR handles UART interrupts.
 func (d *Driver) ISR() {
+	var rxerr uint32
 	for {
 		ir, _ := d.p.Int()
 		switch ir {
@@ -125,27 +126,38 @@ func (d *Driver) ISR() {
 			// todo
 		case TxReady:
 			atomic.StoreUint32(&d.isr, isrTx)
-			for {
-				if d.txn >= len(d.txdata) {
-					d.txdone.Wakeup()
-					break
-				}
-				if d.p.Status1()&TxFIFONotFull == 0 {
-					m := len(d.txdata) - d.txn
-					if m <= 12 {
-						tft := TFT4
-						if m <= 8 {
-							tft = TFT8
-						}
-						d.p.SetTFT(tft)
+			if d.txn >= len(d.txdata) {
+				d.txdone.Wakeup()
+			} else {
+				for {
+					d.p.Store(int(d.txdata[d.txn]))
+					if d.txn++; d.txn >= len(d.txdata) {
+						d.p.SetTFT(TFT8)
+						break
 					}
-					break
+					st, err := d.p.Status()
+					rxerr |= uint32(err)
+					if st&TxFull != 0 {
+						m := len(d.txdata) - d.txn
+						if m <= 12 {
+							tft := TFT4
+							if m <= 8 {
+								tft = TFT8
+							}
+							d.p.SetTFT(tft)
+						}
+						break
+					}
 				}
-				d.p.Store(int(d.txdata[d.txn]))
-				d.txn++
 			}
 			atomic.StoreUint32(&d.isr, isrNone)
 		default:
+			for {
+				drxerr := atomic.LoadUint32(&d.rxerr)
+				if atomic.CompareAndSwapUint32(&d.rxerr, drxerr, drxerr|rxerr) {
+					break
+				}
+			}
 			return
 		}
 	}

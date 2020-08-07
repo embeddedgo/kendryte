@@ -342,7 +342,3 @@ func (p *Periph) Load() int {
 func (p *Periph) Store(d int) {
 	p.rbr_dll_thr.Store(uint32(d))
 }
-
-func (p *Periph) CPR() uint32 {
-	return p.cpr.Load()
-}

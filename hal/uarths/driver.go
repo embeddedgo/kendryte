@@ -169,6 +169,10 @@ func (d *Driver) ISR() {
 			d.txdone.Wakeup()
 		} else {
 			for {
+				d.p.Store(int(d.txdata[d.txn]))
+				if d.txn++; d.txn == len(d.txdata) {
+					break
+				}
 				if d.p.TxFull() {
 					if m := 9 - (len(d.txdata) - d.txn); m > txMin {
 						if m > 7 {
@@ -176,10 +180,6 @@ func (d *Driver) ISR() {
 						}
 						d.p.SetTxMinCnt(m)
 					}
-					break
-				}
-				d.p.Store(int(d.txdata[d.txn]))
-				if d.txn++; d.txn == len(d.txdata) {
 					break
 				}
 			}

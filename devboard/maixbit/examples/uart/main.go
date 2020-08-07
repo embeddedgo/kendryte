@@ -17,8 +17,6 @@ import (
 var u *uart.Driver
 
 func main() {
-	println(uart.UART(1).CPR())
-
 	rx := fpioa.Pin(4)
 	tx := fpioa.Pin(5)
 	rx.Setup(fpioa.UART1_RX | fpioa.EnIE | fpioa.Schmitt)
@@ -30,7 +28,7 @@ func main() {
 	irq.UART1.Enable(rtos.IntPrioLow, irq.M0)
 
 	for {
-		u.WriteString("0123456789abcdefghijklmnoprstuvwxyx\r\n")
+		u.WriteString("0123456789abcdefghijklmnoprstuvABCDEFGHIJKLMNOPRSTU\r\n")
 	}
 }
 
