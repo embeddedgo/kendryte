@@ -6,7 +6,6 @@ package uart
 
 import (
 	"embedded/rtos"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -54,7 +53,6 @@ type Driver struct {
 	isr       uint32
 	timeoutRx time.Duration
 	timeoutTx time.Duration
-	mx        sync.Mutex
 }
 
 // NewDriver returns a new driver for p.
@@ -91,7 +89,7 @@ func (d *Driver) Setup(cfg Config, baudrate int) {
 	d.p.SetLineConf(LineConf(cfg))
 	d.p.SetModeConf(ModeConf(cfg >> 8))
 	d.p.SetBaudrate(baudrate)
-	d.p.SetFIFOConf(FE | TFT2 | RFT1)
+	d.p.SetFIFOConf(FE)
 	d.p.SetIntConf(PTIME | TxReadyEn)
 }
 
@@ -111,6 +109,11 @@ func (d *Driver) SetWriteTimeout(timeout time.Duration) {
 }
 
 const (
+	cmdNone = iota
+	cmdWakeup
+)
+
+const (
 	isrNone = iota
 	isrRx
 	isrTx
@@ -123,7 +126,29 @@ func (d *Driver) ISR() {
 		ir, _ := d.p.Int()
 		switch ir {
 		case RxReady:
-			// todo
+			atomic.StoreUint32(&d.isr, isrRx)
+			for {
+				b := d.p.Load()
+				nextw := d.nextw
+				d.rxbuf[nextw] = byte(b)
+				if nextw++; int(nextw) == len(d.rxbuf) {
+					nextw = 0
+				}
+				if nextw != atomic.LoadUint32(&d.nextr) {
+					atomic.StoreUint32(&d.nextw, nextw)
+					if atomic.CompareAndSwapUint32(&d.rxcmd, cmdWakeup, cmdNone) {
+						d.rxready.Wakeup()
+					}
+				} else {
+					rxerr |= 1 // overflow
+				}
+				st, err := d.p.Status()
+				rxerr |= uint32(err)
+				if st&RxNotEmpty == 0 {
+					break
+				}
+			}
+			atomic.StoreUint32(&d.isr, isrNone)
 		case TxReady:
 			atomic.StoreUint32(&d.isr, isrTx)
 			if d.txn >= len(d.txdata) {

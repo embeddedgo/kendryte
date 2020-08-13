@@ -6,6 +6,8 @@ package uart
 
 import (
 	"embedded/mmio"
+	"runtime"
+	"strings"
 	"time"
 	"unsafe"
 
@@ -166,9 +168,9 @@ func (p *Periph) SetLineConf(c LineConf) {
 type ModeConf uint8
 
 const (
-	DTR  ModeConf = 1 << 0 // directly control of DTR output
-	RTS  ModeConf = 1 << 1 // directly control of RTS output
-	LB   ModeConf = 1 << 4 // put the UART into loop-back diagnostic mode
+	DTR ModeConf = 1 << 0 // directly control of DTR output
+	RTS ModeConf = 1 << 1 // directly control of RTS output
+	LB  ModeConf = 1 << 4 // put the UART into loop-back diagnostic mode
 	//AFCE ModeConf = 1 << 5 // auto flow controll enable bit
 	SIRE ModeConf = 1 << 6 // IrDA SIR (serial infrared) mode enable bit
 )
@@ -254,9 +256,9 @@ const (
 	None        Int = 1 // no interrupt
 )
 
-// Event returns the highest priority enabled event. If rxto is true the RxReady
-// event was generated because there was no in or out activity on non-empty FIFO
-// (below Rx trigger level) for 4 word period.
+// Int returns the highest priority enabled interrupt. If rxto is true the
+// RxReady interrupt was generated because there was no in or out activity on
+// non-empty FIFO (below Rx trigger level) for 4 word period.
 func (p *Periph) Int() (i Int, rxto bool) {
 	iir := p.fcr_iir.Load()
 	return Int(iir & 7), iir&15 == 12
@@ -266,10 +268,10 @@ func (p *Periph) Int() (i Int, rxto bool) {
 type IntConf uint8
 
 const (
-	RxStatusEn    IntConf = 1 << 2 // enable RxStatus event
-	RxReadyEn     IntConf = 1 << 0 // enbale RxReady event
-	TxReadyEn     IntConf = 1 << 1 // enable TxReady event
-	ModemStatusEn IntConf = 1 << 3 // enable ModemStatus event
+	RxStatusEn    IntConf = 1 << 2 // enable RxStatus interrupt
+	RxReadyEn     IntConf = 1 << 0 // enbale RxReady interrupt
+	TxReadyEn     IntConf = 1 << 1 // enable TxReady interrupt
+	ModemStatusEn IntConf = 1 << 3 // enable ModemStatus interrupt
 	PTIME         IntConf = 1 << 7 // programmable Tx intrerrupt mode enable
 )
 
@@ -281,10 +283,25 @@ func (p *Periph) SetIntConf(c IntConf) {
 	p.dlh_ier.Store(uint32(c))
 }
 
+func (p *Periph) Baudrate() int {
+	for p.Status1()&Busy != 0 {
+		runtime.Gosched()
+	}
+	p.lcr.SetBits(dla)
+	div := p.dlh_ier.Load() << 12
+	div |= p.rbr_dll_thr.Load() << 4
+	div |= p.dlf.Load()
+	p.lcr.ClearBits(dla)
+	return int((p.Bus().Clock() + int64(div)/2) / int64(div))
+}
+
 func (p *Periph) SetBaudrate(br int) {
 	div := (p.Bus().Clock() + int64(br)/2) / int64(br)
 	if uint64(div) >= 1<<20 {
 		panic("uart: bad baudrate")
+	}
+	for p.Status1()&Busy != 0 {
+		runtime.Gosched()
 	}
 	p.lcr.SetBits(dla)
 	p.dlh_ier.Store(uint32(div >> 12))
@@ -314,6 +331,20 @@ const (
 	ErrAll = ErrOverrun | ErrParity | ErrFraming | ErrRxFIFO
 )
 
+func (e Error) Error() string {
+	a := make([]string, 0, 3)
+	if e&ErrOverrun != 0 {
+		a = append(a, "overrun")
+	}
+	if e&ErrParity != 0 {
+		a = append(a, "parity")
+	}
+	if e&ErrFraming != 0 {
+		a = append(a, "parity")
+	}
+	return strings.Join(a, ",")
+}
+
 // Status returns the line status bits. It clears LINBreak event and all errors.
 func (p *Periph) Status() (Status, Error) {
 	lsr := p.lsr.Load()
@@ -323,7 +354,7 @@ func (p *Periph) Status() (Status, Error) {
 type Status1 uint8
 
 const (
-	Busy           Status1 = 1 << 0
+	Busy Status1 = 1 << 0
 	//TxFIFONotFull  Status1 = 1 << 1
 	//TxFIFOEmpty    Status1 = 1 << 2
 	//RxFIFONotEmpty Status1 = 1 << 3
