@@ -22,11 +22,11 @@ func (d *Driver) Len() int {
 // provided slice to buffer received data. Othewrise it allocates a small buffer
 // itself. At least 2-byte buffer is required, which is effectively one byte
 // buffer because the other byte always remains unused for efficient checking of
-// an empty state. You cannot rely on 8-byte hardware buffer as extension of the
-// software buffer because for the performance reasons the ISR will not return
-// until it has read all bytes from hardware. If the software buffer is full the
-// ISR simply drops read bytes until there is no more data to read. EnableRx
-// panics if the receiving is already enabled or rxbuf is too short.
+// an empty state. You cannot rely on 8-byte hardware buffer as an extension of
+// the software buffer because for the performance reasons the ISR will not
+// return until it has read all bytes from hardware. If the software buffer is
+// full the ISR simply drops read bytes until there is no more data to read.
+// EnableRx panics if the receiving is already enabled or rxbuf is too short.
 func (d *Driver) EnableRx(rxbuf []byte) {
 	if d.rxbuf != nil {
 		panic("uarths: enabled before")
@@ -45,7 +45,7 @@ func (d *Driver) EnableRx(rxbuf []byte) {
 	d.p.EnableIRQ(RxMax)
 }
 
-// DisableRx disables the UART receiver. The receive buffer is returned and no
+// DisableRx disables the UARTHS receiver. The receive buffer is returned and no
 // longer referenced by driver. You can use the Periph.DisableRx if you want to
 // temporary disable the receiver leaving the driver intact.
 func (d *Driver) DisableRx() (rxbuf []byte) {
