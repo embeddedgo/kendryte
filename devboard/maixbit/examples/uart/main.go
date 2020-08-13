@@ -25,7 +25,7 @@ func main() {
 	tx.Setup(fpioa.UART1_TX | fpioa.DriveH34L23 | fpioa.EnOE)
 
 	u = uart.NewDriver(uart.UART(1))
-	u.Setup(uart.Word8b, 115200)
+	u.Setup(uart.Word8b, 750e3)
 	u.EnableRx(nil)
 
 	irq.UART1.Enable(rtos.IntPrioLow, irq.M0)

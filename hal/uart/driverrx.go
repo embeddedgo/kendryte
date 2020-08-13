@@ -4,7 +4,10 @@
 
 package uart
 
-import "sync/atomic"
+import (
+	"runtime"
+	"sync/atomic"
+)
 
 // Len returns the number of bytes that are ready to read from Rx buffer.
 func (d *Driver) Len() int {
@@ -15,6 +18,15 @@ func (d *Driver) Len() int {
 	return n
 }
 
+// EnableRx enables the UART receiver. If rxbuf is not nil the Driver uses the
+// provided slice to buffer received data. Othewrise it allocates a small buffer
+// itself. At least 2-byte buffer is required, which is effectively one byte
+// buffer because the other byte always remains unused for efficient checking of
+// an empty state. You cannot rely on 8-byte hardware buffer as an extension of
+// the software buffer because for the performance reasons the ISR will not
+// return until it has read all bytes from hardware. If the software buffer is
+// full the ISR simply drops read bytes until there is no more data to read.
+// EnableRx panics if the receiving is already enabled or rxbuf is too short.
 func (d *Driver) EnableRx(rxbuf []byte) {
 	if d.rxbuf != nil {
 		panic("uarths: enabled before")
@@ -29,6 +41,18 @@ func (d *Driver) EnableRx(rxbuf []byte) {
 	d.nextw = 0
 	d.p.SetRFT(RFT8)
 	d.p.SetIntConf(PTIME | TxReadyEn | RxReadyEn)
+}
+
+// DisableRx disables the UART receiver. The receive buffer is returned and no
+// longer referenced by driver.
+func (d *Driver) DisableRx() (rxbuf []byte) {
+	d.p.SetIntConf(PTIME | TxReadyEn)
+	for atomic.LoadUint32(&d.isr) == isrRx {
+		runtime.Gosched()
+	}
+	rxbuf = d.rxbuf
+	d.rxbuf = nil
+	return
 }
 
 func (d *Driver) waitRxData() int {
