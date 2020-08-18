@@ -7,6 +7,7 @@ package uart
 import (
 	"runtime"
 	"sync/atomic"
+	"time"
 	"unsafe"
 )
 
@@ -18,8 +19,7 @@ func (d *Driver) WriteString(s string) (n int, err error) {
 	d.txdata = s
 	d.txn = 1
 	d.txdone.Clear()
-	d.p.SetTFT(TFT2)
-	d.p.Store(int(s[0]))
+	d.p.Store(int(s[0])) // there are at least 8 free bytes in Tx FIFO
 	if !d.txdone.Sleep(d.timeoutTx) {
 		d.txdata = d.txdata[:0]
 		for atomic.LoadUint32(&d.isr) == isrTx {
@@ -48,9 +48,17 @@ func (d *Driver) WriteByte(b byte) (err error) {
 	return
 }
 
-/*
+// Flush waits until the hardware Tx buffer is empty. You cannot rely on Flush
+// to for example set the external transceiver to Rx mode. It gives you no
+// guarantee that all bits have been physically transmitted but only ensures the
+// internal Tx FIFO is empty. You can check the TxDone bit to ensure the Tx
+// shift register is empty but it also does not guarantee the last (stop) bit
+// have left the external pin and reached the remote party or has been
+// processed by external transceiver.
 func (d *Driver) Flush() error {
+	d.txdone.Clear()
 	d.p.SetTFT(TFT0)
+	d.txdone.Sleep(8 * 10 * time.Second / time.Duration(d.p.Baudrate()))
+	d.p.SetTFT(TFT8)
 	return nil
 }
-*/

@@ -79,6 +79,10 @@ func (d *Driver) WriteByte(b byte) (err error) {
 	return
 }
 
+// Flush waits until the hardware Tx buffer is empty. You cannot rely on Flush
+// to for example set the external transceiver to Rx mode. It gives you no
+// guarantee that all bits have been physically transmitted but only ensures the
+// internal Tx FIFO is empty.
 func (d *Driver) Flush() error {
 	d.p.SetTxMinCnt(1)
 	for d.p.Events()&TxMin == 0 {

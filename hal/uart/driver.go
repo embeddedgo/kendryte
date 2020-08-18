@@ -89,7 +89,7 @@ func (d *Driver) Setup(cfg Config, baudrate int) {
 	d.p.SetLineConf(LineConf(cfg))
 	d.p.SetModeConf(ModeConf(cfg >> 8))
 	d.p.SetBaudrate(baudrate)
-	d.p.SetFIFOConf(FE)
+	d.p.SetFIFOConf(FE | TFT8)
 	d.p.SetIntConf(PTIME | TxReadyEn)
 }
 
