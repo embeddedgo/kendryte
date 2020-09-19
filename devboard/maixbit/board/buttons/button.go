@@ -21,3 +21,7 @@ type Button uint8
 
 func (b Button) Read() int      { return fpioa.Pin(b).Load() ^ 1 }
 func (b Button) Pin() fpioa.Pin { return fpioa.Pin(b) }
+
+func init() {
+	BOOT.Pin().Setup(fpioa.EnIE)
+}
