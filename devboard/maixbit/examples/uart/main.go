@@ -36,7 +36,7 @@ func main() {
 	s := "00000000001111111111222222222233333333334444444444" +
 		"555555555566666666667777777777\r\n"
 	br := u.Periph().Baudrate()
-	for k := 0; k < 2; k++ {
+	for k := 0; true || k < 2; k++ {
 		t := time.Now()
 		for i := 0; i < n; i++ {
 			u.WriteString(s)
@@ -46,7 +46,7 @@ func main() {
 		bps := (n*len(s)*1e9 + dt/2) / dt
 		fmt.Fprintf(u, "br: %d b/s (%d B/s),  speed: %d line/s (%d B/s)\r\n\n",
 			br, br/8, lps, bps)
-		time.Sleep(2 * time.Second)
+		//time.Sleep(2 * time.Second)
 	}
 
 	s = "<=[+](*)->0123456789abcdefghijklmnoprstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ"
