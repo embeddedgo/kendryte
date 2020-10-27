@@ -32,6 +32,8 @@ func main() {
 
 // Results (K210 416 MHz):
 //
+// n=2:   duff=19.61875ms,  loop=23.442428ms
+// n=3:   duff=16.542548ms, loop=20.136899ms
 // n=4:   duff=14.564423ms, loop=18.489062ms
 // n=64:  duff=10.153846ms, loop=15.215384ms
 // n=128: duff=10.011779ms, loop=15.026923ms
