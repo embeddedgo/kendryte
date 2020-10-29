@@ -10,32 +10,36 @@ import (
 	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
 )
 
-const n = 64
+const n = 4
 
-var a, b [n]uint64
+var (
+	a = new([n]uint64)
+	b = new([n]uint64)
+)
 
 func main() {
-	t1 := time.Now()
-	for i := 0; i < 1000*128/n; i++ {
-		a = b
-		b = a
-		a = b
-		b = a
-		a = b
-		b = a
-		a = b
-		b = a
+	for {
+		t1 := time.Now()
+		for i := 0; i < 1000*128/n; i++ {
+			*a = *b
+			*b = *a
+			*a = *b
+			*b = *a
+			*a = *b
+			*b = *a
+			*a = *b
+			*b = *a
+		}
+		t2 := time.Now()
+		println(t2.Sub(t1).String())
+		time.Sleep(time.Second)
 	}
-	t2 := time.Now()
-	println(t2.Sub(t1).String())
 }
 
 // Results (K210 416 MHz):
 //
-// n=2:   duff=19.61875ms,  loop=23.442428ms
-// n=3:   duff=16.542548ms, loop=20.136899ms
-// n=4:   duff=14.564423ms, loop=18.489062ms
-// n=64:  duff=10.153846ms, loop=15.215384ms
-// n=128: duff=10.011779ms, loop=15.026923ms
-//
-// loop means ssaConfig.noDuffDevice=true
+// n=2:   duff=19.6ms, loop=27.6ms, inline=12.2ms
+// n=3:   duff=16.6ms, loop=23.9ms, inline=10.0ms
+// n=4:   duff=15.1ms, loop=22.0ms, inline=9.46ms
+// n=64:  duff=10.7ms, loop=17.0ms
+// n=128: duff=10.0ms, loop=16.1ms
