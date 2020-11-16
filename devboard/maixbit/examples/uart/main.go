@@ -30,24 +30,28 @@ func main() {
 
 	irq.UART1.Enable(rtos.IntPrioLow, irq.M0)
 
+	// Speed test
+
+	u.WriteString("\r\nWrite speed test...\r\n\n")
 	time.Sleep(time.Second)
 
 	n := 40
 	s := "00000000001111111111222222222233333333334444444444" +
 		"555555555566666666667777777777\r\n"
 	br := u.Periph().Baudrate()
-	for k := 0; true || k < 2; k++ {
+	for k := 0; k < 2; k++ {
 		t := time.Now()
 		for i := 0; i < n; i++ {
 			u.WriteString(s)
 		}
-		dt := int(time.Now().Sub(t))
-		lps := (n*1e9 + dt/2) / dt
-		bps := (n*len(s)*1e9 + dt/2) / dt
-		fmt.Fprintf(u, "br: %d b/s (%d B/s),  speed: %d line/s (%d B/s)\r\n\n",
-			br, br/8, lps, bps)
-		//time.Sleep(2 * time.Second)
+		dt := int64(time.Now().Sub(t))
+		bps := (int64(n*len(s))*1e9 + dt/2) / dt
+		fmt.Fprintf(u, "baud rate: %d b/s (%d B/s),  speed: %d b/s (%d B/s)\r\n\n",
+			br, br/8, bps*8, bps)
+		time.Sleep(2 * time.Second)
 	}
+
+	// Read test
 
 	s = "<=[+](*)->0123456789abcdefghijklmnoprstuvwxyzABCDEFGHIJKLMNOPRSTUVWXYZ"
 	u.WriteString(s)
