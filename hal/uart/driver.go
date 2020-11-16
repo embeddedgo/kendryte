@@ -76,7 +76,7 @@ const (
 
 	//HWFC = Config(RTS|AFCE) << 8 // hardware flow controll using RTS/CTS
 	Loop = Config(LB) << 8   // loop-back diagnostic mode
-	SIR  = Config(SIRE) << 8 // IrDA SIR (serial infrared) mode
+	IR   = Config(SIRE) << 8 // IrDA SIR (serial infrared) mode
 )
 
 func (d *Driver) Periph() *Periph {
