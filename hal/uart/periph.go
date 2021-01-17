@@ -89,6 +89,7 @@ func (p *Periph) Bus() bus.Bus {
 	return bus.APB0
 }
 
+// n returns UART number starting from 0 (UART1.n() = 0).
 func (p *Periph) n() uintptr {
 	return (uintptr(unsafe.Pointer(p)) - mmap.UART1_BASE) / 0x10000
 }

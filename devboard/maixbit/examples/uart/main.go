@@ -5,13 +5,12 @@
 package main
 
 import (
-	"embedded/rtos"
 	"fmt"
 	"time"
 
 	"github.com/embeddedgo/kendryte/hal/fpioa"
-	"github.com/embeddedgo/kendryte/hal/irq"
 	"github.com/embeddedgo/kendryte/hal/uart"
+	"github.com/embeddedgo/kendryte/hal/uart/uart1"
 
 	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
 )
@@ -19,16 +18,11 @@ import (
 var u *uart.Driver
 
 func main() {
-	rx := fpioa.Pin(4)
-	tx := fpioa.Pin(5)
-	rx.Setup(fpioa.UART1_RX | fpioa.EnIE | fpioa.Schmitt)
-	tx.Setup(fpioa.UART1_TX | fpioa.DriveH34L23 | fpioa.EnOE)
-
-	u = uart.NewDriver(uart.UART(1))
+	u := uart1.Driver()
+	u.UsePin(fpioa.Pin(4), uart.RXD)
+	u.UsePin(fpioa.Pin(5), uart.TXD)
 	u.Setup(uart.Word8b, 750e3)
 	u.EnableRx(nil)
-
-	irq.UART1.Enable(rtos.IntPrioLow, irq.M0)
 
 	// Speed test
 
@@ -70,6 +64,3 @@ func main() {
 		}
 	}
 }
-
-//go:interrupthandler
-func UART1_Handler() { u.ISR() }

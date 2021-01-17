@@ -7,10 +7,15 @@ package init
 import (
 	"embedded/arch/riscv/systim"
 	"embedded/rtos"
+	"os"
 	"runtime"
+	"syscall"
+	_ "unsafe"
 
+	"github.com/embeddedgo/fs/termfs"
 	"github.com/embeddedgo/kendryte/hal/fpioa"
 	"github.com/embeddedgo/kendryte/hal/uart"
+	"github.com/embeddedgo/kendryte/hal/uart/uart3"
 	"github.com/embeddedgo/kendryte/p/bus"
 	"github.com/embeddedgo/kendryte/p/sysctl"
 )
@@ -40,29 +45,37 @@ func init() {
 	bus.APB2.SetClock(cpuHz / int64(div))
 	systim.Setup(cpuHz / 50)
 
-	setupSystemWriter()
+	setupConsole()
 	runtime.GOMAXPROCS(2)
 }
 
-const (
-	dbgPin  = 5
-	dbgUART = 3
-	dbgFunc = fpioa.UART3_TX
-)
-
-func setupSystemWriter() {
-	tx := fpioa.Pin(dbgPin)
-	tx.Setup(dbgFunc | fpioa.DriveH34L23 | fpioa.EnOE)
-
-	u := uart.UART(dbgUART)
-	u.EnableClock()
-	u.Reset()
-	u.SetLineConf(uart.W8)
-	u.SetFIFOConf(uart.FE | uart.CRF | uart.CTF | uart.TFT8 | uart.RFT1)
-	u.SetIntConf(uart.PTIME)
-	u.SetBaudrate(115200)
-
+func setupConsole() {
+	u := uart3.Driver()
+	u.UsePin(fpioa.Pin(4), uart.RXD)
+	u.UsePin(fpioa.Pin(5), uart.TXD)
+	u.Setup(uart.Word8b, 115200)
 	rtos.SetSystemWriter(write)
+	u.EnableRx(nil)
+
+	// Setup a serial console (standard input and output).
+	con := termfs.New("UART3", u, u)
+	con.SetCharMap(termfs.InCRLF | termfs.OutLFCRLF)
+	con.SetEcho(true)
+	con.SetLineMode(true, 256)
+	rtos.Mount(con, "/dev/console")
+	var err error
+	os.Stdin, err = os.OpenFile("/dev/console", syscall.O_RDONLY, 0)
+	checkErr(err)
+	os.Stdout, err = os.OpenFile("/dev/console", syscall.O_WRONLY, 0)
+	checkErr(err)
+	os.Stderr = os.Stdout
+}
+
+func checkErr(err error) {
+	if err != nil {
+		println(err.Error())
+		os.Exit(1)
+	}
 }
 
 func write(_ int, p []byte) int {
@@ -76,10 +89,10 @@ func write(_ int, p []byte) int {
 }
 
 func writeByte(b byte) {
-	u := uart.UART(dbgUART)
+	u := uart3.Driver()
 	for {
-		if ev, _ := u.Status(); ev&uart.TxFull == 0 {
-			u.Store(int(b))
+		if ev, _ := u.Periph().Status(); ev&uart.TxFull == 0 {
+			u.Periph().Store(int(b))
 			return
 		}
 	}

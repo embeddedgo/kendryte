@@ -1,0 +1,4 @@
+github.com/embeddedgo/display v0.1.9/go.mod h1:2i5StnXmb6K+Jq9AQ4xPQDqPlkT50lVBPMK9DKt8o0s=
+github.com/embeddedgo/fs v0.0.2 h1:L7Oxbj7W+FAubXtlSmx+09ftdMGFbNgSFJCv73qdWHE=
+github.com/embeddedgo/fs v0.0.2/go.mod h1:HxvXq7Q1lup39d5dUfG18xAnD6YYsDfpcsnPkn+uM1o=
+github.com/embeddedgo/stm32 v0.8.1/go.mod h1:tXG0o9LmqastZxQ8x9OaPm+aS88lFin+YMslYM3Gyrc=
