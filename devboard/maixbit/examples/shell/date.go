@@ -1,0 +1,77 @@
+// Copyright 2020 The Embedded Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+)
+
+const dateUsage = `
+date
+date YYYY-MM-DD hh:mm:ss UTC{+|-}DURATION
+`
+
+// time.Parse is too heavy
+func parse(s, sep string) (v [3]int, err error) {
+	fields := strings.Split(s, sep)
+	if len(fields) != 3 {
+		err = errors.New("bad layout")
+		return
+	}
+	for i, f := range fields {
+		var u uint64
+		u, err = strconv.ParseUint(f, 10, 16)
+		if err != nil {
+			return
+		}
+		v[i] = int(u)
+	}
+	return
+}
+
+
+func date(args []string) {
+	now := time.Now()
+	switch len(args) {
+	case 4:
+		ymd, err := parse(args[1], "-")
+		if isErr(err) {
+			break
+		}
+		hms, err := parse(args[2], ":")
+		if isErr(err) {
+			break
+		}
+		utcOffset := args[3]
+		if !strings.HasPrefix(utcOffset, "UTC") {
+			isErr(errors.New("bad layout"))
+			break
+		}
+		var offset time.Duration
+		if len(utcOffset) > 3 {
+			offset, err = time.ParseDuration(utcOffset[3:])
+			if isErr(err) {
+				break
+			}
+			time.Local = time.FixedZone(utcOffset, int(offset/time.Second))
+		} else {
+			time.Local = time.UTC
+		}
+		t := time.Date(
+			ymd[0], time.Month(ymd[1]), ymd[2],
+			hms[0], hms[1], hms[2], 0, time.Local,
+		)
+		time.Set(now, t)
+		prompt = "> "
+	case 1:
+		fmt.Println(now.Format(timeLayout))
+	default:
+		fmt.Print(dateUsage)
+	}
+}
