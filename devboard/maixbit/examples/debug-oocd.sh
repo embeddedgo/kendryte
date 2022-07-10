@@ -5,4 +5,4 @@ TARGET=k210
 OOCD=openocd-kendryte
 RESET=none
 
-. ../../../../../scripts/debug-oocd.sh $@
+. $(emgo env GOROOT)/../scripts/debug-oocd.sh $@

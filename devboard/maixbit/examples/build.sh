@@ -3,5 +3,4 @@
 GOTARGET=k210
 GOMEM=0x80000000:6M
 
-. ../../../../../scripts/build.sh $@
-
+. $(emgo env GOROOT)/../scripts/build.sh $@
