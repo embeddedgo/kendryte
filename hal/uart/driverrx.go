@@ -18,39 +18,36 @@ func (d *Driver) Len() int {
 	return n
 }
 
-// EnableRx enables the UART receiver. If rxbuf is not nil the Driver uses the
-// provided slice to buffer received data. Othewrise it allocates a small buffer
-// itself. At least 2-byte buffer is required, which is effectively one byte
-// buffer because the other byte always remains unused for efficient checking of
-// an empty state. You cannot rely on 8-byte hardware buffer as an extension of
-// the software buffer because for the performance reasons the ISR will not
-// return until it has read all bytes from hardware. If the software buffer is
-// full the ISR simply drops read bytes until there is no more data to read.
-// EnableRx panics if the receiving is already enabled or rxbuf is too short.
-func (d *Driver) EnableRx(rxbuf []byte) {
+// EnableRx enables the UART receiver. It allocates an internal ring buffer of
+// bufLen size. In most cases bufLen = 64 is good choise. At least 2-byte buffer
+// is required, which is effectively one byte buffer because the other byte
+// always remains unused for efficient checking of an empty state. You cannot
+// rely on 8-byte hardware buffer as an extension of the software buffer
+// because for the performance reasons the ISR will no return until it has read
+// all bytes from hardware. If the software buffer is full the ISR simply drops
+// read bytes until there is no more data to read. EnableRx panics if the
+// receiving is already enabled.
+func (d *Driver) EnableRx(bufLen int) {
 	if d.rxbuf != nil {
 		panic("uarths: enabled before")
 	}
-	if rxbuf == nil {
-		rxbuf = make([]byte, 128)
-	} else if len(rxbuf) < 2 {
+	if bufLen < 2 {
 		panic("uarths: rxbuf too short")
 	}
-	d.rxbuf = rxbuf
+	d.rxbuf = make([]byte, bufLen)
 	d.nextr = 0
 	d.nextw = 0
 	d.p.SetRFT(RFT8)
 	d.p.SetIntConf(PTIME | TxReadyEn | RxReadyEn)
 }
 
-// DisableRx disables the UART receiver. The receive buffer is returned and no
-// longer referenced by driver.
-func (d *Driver) DisableRx() (rxbuf []byte) {
+// DisableRx disables the UART receiver and frees memory allocated for the
+//internal ring buffer.
+func (d *Driver) DisableRx() {
 	d.p.SetIntConf(PTIME | TxReadyEn)
 	for atomic.LoadUint32(&d.isr) == isrRx {
 		runtime.Gosched()
 	}
-	rxbuf = d.rxbuf
 	d.rxbuf = nil
 	return
 }

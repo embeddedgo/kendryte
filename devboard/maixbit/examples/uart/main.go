@@ -22,7 +22,7 @@ func main() {
 	u.UsePin(fpioa.Pin(4), uart.RXD)
 	u.UsePin(fpioa.Pin(5), uart.TXD)
 	u.Setup(uart.Word8b, 750e3)
-	u.EnableRx(nil)
+	u.EnableRx(64)
 
 	// Speed test
 

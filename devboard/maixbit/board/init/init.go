@@ -55,7 +55,7 @@ func setupConsole() {
 	u.UsePin(fpioa.Pin(5), uart.TXD)
 	u.Setup(uart.Word8b, 115200)
 	rtos.SetSystemWriter(write)
-	u.EnableRx(nil)
+	u.EnableRx(64)
 
 	// Setup a serial console (standard input and output).
 	con := termfs.New("UART3", u, u)
