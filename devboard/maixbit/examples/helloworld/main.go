@@ -7,7 +7,7 @@ package main
 import (
 	"fmt"
 
-	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
+	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/system"
 )
 
 func main() {

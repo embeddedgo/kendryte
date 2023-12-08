@@ -58,7 +58,7 @@ import (
 	"os"
 	"strings"
 
-	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
+	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/system"
 )
 
 var prompt = "date!> "

@@ -9,7 +9,7 @@ import (
 	"math/rand"
 	"runtime"
 
-	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
+	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/system"
 )
 
 type report struct {

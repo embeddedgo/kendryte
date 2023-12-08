@@ -12,7 +12,7 @@ import (
 	"github.com/embeddedgo/kendryte/hal/uart"
 	"github.com/embeddedgo/kendryte/hal/uart/uart1"
 
-	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
+	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/system"
 )
 
 var u *uart.Driver

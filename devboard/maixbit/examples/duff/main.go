@@ -7,7 +7,7 @@ package main
 import (
 	"time"
 
-	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
+	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/system"
 )
 
 const n = 4

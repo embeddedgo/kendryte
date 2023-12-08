@@ -7,7 +7,7 @@ package leds
 import (
 	"github.com/embeddedgo/kendryte/hal/fpioa"
 
-	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/init"
+	_ "github.com/embeddedgo/kendryte/devboard/maixbit/board/system"
 )
 
 // Onboard LEDs
